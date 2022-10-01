@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  name: wasm-test
+spec:
+  template:
+    metadata:
+      annotations:
+        module.wasm.image/variant: compat-smart
+      creationTimestamp: null
+    spec:
+      containers:
+      - image: wasmedge/example-wasi:latest
+        name: wasm-test
+        resources: {}
+      restartPolicy: Never
+      runtimeClassName: crun
+  backoffLimit: 1

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kwasm-initializer
+  labels:
+    app: default-init
+spec:
+  selector:
+    matchLabels:
+      app: default-init
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: kwasm-initializer
+        app: default-init
+    spec:
+      hostPID: true
+      volumes:
+        - name: node-root
+          hostPath:
+            path: /
+        - name: entrypoint
+          configMap:
+            name: entrypoint
+            defaultMode: 0744
+      initContainers:
+        - image: ghcr.io/kwasm/kwasm-node-installer:main
+          name: kwasm-initializer
+          env:
+            - name: NODE_ROOT
+              value: /mnt/node-root/
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: node-root
+              mountPath: /mnt/node-root/
+      containers:
+        - image: k8s.gcr.io/pause:3.1
+          name: pause
