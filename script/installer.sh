@@ -20,12 +20,17 @@ case $1 in
 
 esac
 
-if ! grep -q crun $NODE_ROOT/etc/containerd/config.toml; then  
+CONTAINERD_CONF=/etc/containerd/config.toml
+if [ -d $NODE_ROOT/etc/eks/containerd ]; then
+    CONTAINERD_CONF=/etc/eks/containerd/containerd-config.toml
+fi 
+
+if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then  
     echo '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun]
     runtime_type = "io.containerd.runc.v2"
     pod_annotations = ["module.wasm.image/variant", "run.oci.handler"]
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun.options]
-    BinaryName = "/opt/kwasm/bin/crun"' >> $NODE_ROOT/etc/containerd/config.toml
+    BinaryName = "/opt/kwasm/bin/crun"' >> $NODE_ROOT$CONTAINERD_CONF
     rm -Rf $NODE_ROOT/opt/kwasm/active
 fi
 
