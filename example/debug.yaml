@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: kwasm-initializer
+  name: kwasm-debug
   labels:
-    app: default-init
+    app: default
 spec:
   selector:
     matchLabels:
-      app: default-init
+      app: default
   updateStrategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        name: kwasm-initializer
-        app: default-init
+        name: kwasm-debug
+        app: default
     spec:
       hostPID: true
       volumes:
@@ -25,9 +25,13 @@ spec:
           configMap:
             name: entrypoint
             defaultMode: 0744
-      initContainers:
-        - image: ghcr.io/kwasm/kwasm-node-installer:main
-          name: kwasm-initializer
+      containers:
+        - image: ubuntu
+          name: kwasm-debug
+          command:
+            - sh
+            - -c
+            - "tail -f /dev/null"
           env:
             - name: NODE_ROOT
               value: /mnt/node-root
@@ -36,6 +40,3 @@ spec:
           volumeMounts:
             - name: node-root
               mountPath: /mnt/node-root/
-      containers:
-        - image: k8s.gcr.io/pause:3.1
-          name: pause
