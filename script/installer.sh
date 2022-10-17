@@ -20,17 +20,28 @@ case $1 in
 
 esac
 
-if ! grep -q crun $NODE_ROOT/etc/containerd/config.toml; then  
+CONTAINERD_CONF=/etc/containerd/config.toml
+IS_MICROK8S=false
+if ps aux | grep kubelet | grep -q snap/microk8s; then
+    CONTAINERD_CONF=/var/snap/microk8s/current/args/containerd-template.toml
+    IS_MICROK8S=true
+fi
+
+if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then  
     echo '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun]
     runtime_type = "io.containerd.runc.v2"
     pod_annotations = ["module.wasm.image/variant", "run.oci.handler"]
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun.options]
-    BinaryName = "/opt/kwasm/bin/crun"' >> $NODE_ROOT/etc/containerd/config.toml
+    BinaryName = "/opt/kwasm/bin/crun"' >> $NODE_ROOT$CONTAINERD_CONF
     rm -Rf $NODE_ROOT/opt/kwasm/active
 fi
 
 if [ ! -f $NODE_ROOT/opt/kwasm/active ]; then
-    nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- /bin/systemctl restart containerd
+    if $IS_MICROK8S; then
+        nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- systemctl restart snap.microk8s.daemon-containerd
+    else
+        nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- /bin/systemctl restart containerd
+    fi
     touch $NODE_ROOT/opt/kwasm/active
 else
     echo "No change in containerd/config.toml"
