@@ -17,8 +17,10 @@ case $1 in
         ln -sf /opt/kwasm/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so.0 && \
         ln -sf /opt/kwasm/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so.0.0.0
         ;;
-
 esac
+
+cp /assets/containerd-shim-spin-v1 $NODE_ROOT/opt/kwasm/bin/containerd-shim-spin-v1
+ln -s /opt/kwasm/bin/containerd-shim-spin-v1 /mnt/node-root/bin/
 
 CONTAINERD_CONF=/etc/containerd/config.toml
 IS_MICROK8S=false
@@ -32,7 +34,11 @@ if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then
     runtime_type = "io.containerd.runc.v2"
     pod_annotations = ["module.wasm.image/variant", "run.oci.handler"]
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun.options]
-    BinaryName = "/opt/kwasm/bin/crun"' >> $NODE_ROOT$CONTAINERD_CONF
+    BinaryName = "/opt/kwasm/bin/crun"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin]
+    runtime_type = "io.containerd.spin.v1"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin.options]
+    BinaryName = "/opt/kwasm/bin/containerd-shim-spin-v1"' >> $NODE_ROOT$CONTAINERD_CONF
     rm -Rf $NODE_ROOT/opt/kwasm/active
 fi
 

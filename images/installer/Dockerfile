@@ -15,6 +15,7 @@ RUN curl -L https://github.com/bytecodealliance/wasmtime/releases/download/v1.0.
     && ./configure --with-wasmtime --enable-embedded-yajl \
     && make \
     && mv crun crun-wasmtime
+RUN curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.3.3/containerd-wasm-shims-v1-linux-$(uname -m|sed s/amd64/aarch64/g).tar.gz | tar -xzf -
 
 FROM busybox as crun-wasmtime
 
@@ -37,6 +38,8 @@ FROM busybox
 COPY --from=builder-crun /crun/crun-* /assets/
 COPY --from=builder-crun /usr/local/lib/libwasmedge.so /assets/libwasmedge.so
 COPY --from=builder-crun /usr/local/lib/libwasmtime.so /assets/libwasmtime.so
+COPY --from=builder-crun /containerd-shim-slight-v1 /assets/containerd-shim-slight-v1
+COPY --from=builder-crun /containerd-shim-spin-v1 /assets/containerd-shim-spin-v1
 COPY script/installer.sh /script/installer.sh
 
 CMD sh /script/installer.sh wasmedge
