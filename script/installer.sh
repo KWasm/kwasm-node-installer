@@ -21,6 +21,8 @@ esac
 
 cp /assets/containerd-shim-spin-v1 $NODE_ROOT/opt/kwasm/bin/containerd-shim-spin-v1
 ln -s /opt/kwasm/bin/containerd-shim-spin-v1 $NODE_ROOT/bin/
+cp /assets/containerd-shim-spin-v1 $NODE_ROOT/opt/kwasm/bin/containerd-shim-wasmedge-v1
+ln -s /opt/kwasm/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/bin/
 
 CONTAINERD_CONF=/etc/containerd/config.toml
 IS_MICROK8S=false
@@ -37,8 +39,8 @@ if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then
     BinaryName = "/opt/kwasm/bin/crun"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin]
     runtime_type = "io.containerd.spin.v1"
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin.options]
-    BinaryName = "/opt/kwasm/bin/containerd-shim-spin-v1"' >> $NODE_ROOT$CONTAINERD_CONF
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmedge]
+    runtime_type = "io.containerd.wasmedge.v1"' >> $NODE_ROOT$CONTAINERD_CONF
     rm -Rf $NODE_ROOT/opt/kwasm/active
 fi
 
