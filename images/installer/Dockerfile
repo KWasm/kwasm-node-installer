@@ -25,28 +25,28 @@ RUN curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/
 
 FROM busybox as crun-wasmtime
 
-COPY --from=builder-crun /crun/crun-wasmtime /assets/crun-wasmtime
-COPY --from=builder-crun /usr/local/lib/libwasmtime.so /assets/libwasmtime.so
+COPY --link  --from=builder-crun /crun/crun-wasmtime /assets/crun-wasmtime
+COPY --link  --from=builder-crun /usr/local/lib/libwasmtime.so /assets/libwasmtime.so
 COPY script/installer.sh /script/installer.sh
 
 CMD sh /script/installer.sh wasmtime
 
 FROM busybox as crun-wasmedge
 
-COPY --from=builder-crun /crun/crun-wasmedge /assets/crun-wasmedge
-COPY --from=builder-crun /usr/local/lib/libwasmedge.so /assets/libwasmedge.so
+COPY --link  --from=builder-crun /crun/crun-wasmedge /assets/crun-wasmedge
+COPY --link  --from=builder-crun /usr/local/lib/libwasmedge.so /assets/libwasmedge.so
 COPY script/installer.sh /script/installer.sh
 
 CMD sh /script/installer.sh wasmedge
 
 FROM busybox
 
-COPY --from=builder-crun /crun/crun-* /assets/
-COPY --from=builder-crun /usr/local/lib/libwasmedge.so /assets/libwasmedge.so
-COPY --from=builder-crun /usr/local/lib/libwasmtime.so /assets/libwasmtime.so
-COPY --from=builder-containerd-shim /containerd-shim-slight-v1 /assets/containerd-shim-slight-v1
-COPY --from=builder-containerd-shim /containerd-shim-spin-v1 /assets/containerd-shim-spin-v1
-COPY --from=builder-containerd-shim /containerd-shim-wasmedge-v1 /assets/containerd-shim-wasmedge-v1
+COPY --link  --from=builder-crun /crun/crun-* /assets/
+COPY --link  --from=builder-crun /usr/local/lib/libwasmedge.so /assets/libwasmedge.so
+COPY --link  --from=builder-crun /usr/local/lib/libwasmtime.so /assets/libwasmtime.so
+COPY --link  --from=builder-containerd-shim /containerd-shim-slight-v1 /assets/containerd-shim-slight-v1
+COPY --link  --from=builder-containerd-shim /containerd-shim-spin-v1 /assets/containerd-shim-spin-v1
+COPY --link  --from=builder-containerd-shim /containerd-shim-wasmedge-v1 /assets/containerd-shim-wasmedge-v1
 COPY script/installer.sh /script/installer.sh
 
 CMD sh /script/installer.sh wasmedge
