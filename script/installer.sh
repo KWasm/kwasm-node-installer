@@ -36,7 +36,11 @@ esac
 
 cp /assets/containerd-shim-spin-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-spin-v1
 cp /assets/containerd-shim-wasmedge-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-wasmedge-v1
-if ! $IS_MICROK8S; then
+if [ -f $NODE_ROOT/usr/local/bin/containerd-shim-spin-v1 ]; then
+    # Replace existing spin shim on Azure AKS nodes
+    ln -sf $KWASM_DIR/bin/containerd-shim-spin-v1 $NODE_ROOT/usr/local/bin/containerd-shim-spin-v1
+    ln -sf $KWASM_DIR/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/usr/local/bin/containerd-shim-wasmedge-v1
+elif ! $IS_MICROK8S; then
     ln -sf $KWASM_DIR/bin/containerd-shim-spin-v1 $NODE_ROOT/bin/
     ln -sf $KWASM_DIR/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/bin/
 fi
