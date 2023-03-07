@@ -20,8 +20,18 @@ FROM ubuntu:18.04 as builder-containerd-shim
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y curl
-RUN curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.3.3/containerd-wasm-shims-v1-linux-$(uname -m).tar.gz | tar -xzf - && \
-    curl -L https://github.com/second-state/runwasi/releases/download/v0.3.2/containerd-shim-wasmedge-v1-v0.3.2-linux-$(uname -m | sed s/aarch64/arm64/g | sed s/x86_64/amd64/g).tar.gz | tar -xzf -
+
+RUN curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.4.0/containerd-wasm-shims-v1-linux-$(uname -m).tar.gz | tar -xzf - \
+    && curl -L https://github.com/second-state/runwasi/releases/download/v0.3.2/containerd-shim-wasmedge-v1-v0.3.2-linux-$(uname -m | sed s/aarch64/arm64/g | sed s/x86_64/amd64/g).tar.gz | tar -xzf -
+
+FROM ubuntu:18.04 as builder-containerd-shim-spin
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y git curl libclang-dev make build-essential clang\
+    && git clone --depth 1 --branch main https://github.com/deislabs/containerd-wasm-shims.git
+WORKDIR /containerd-wasm-shims
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup && chmod +x ./rustup \
+    && ./rustup -y \
+    && bash -c "source ~/.cargo/env && make build-spin"
 
 FROM busybox as crun-wasmtime
 
@@ -41,12 +51,12 @@ CMD sh /script/installer.sh wasmedge
 
 FROM busybox
 
-COPY --link  --from=builder-crun /crun/crun-* /assets/
-COPY --link  --from=builder-crun /usr/local/lib/libwasmedge.so /assets/libwasmedge.so
-COPY --link  --from=builder-crun /usr/local/lib/libwasmtime.so /assets/libwasmtime.so
-COPY --link  --from=builder-containerd-shim /containerd-shim-slight-v1 /assets/containerd-shim-slight-v1
-COPY --link  --from=builder-containerd-shim /containerd-shim-spin-v1 /assets/containerd-shim-spin-v1
-COPY --link  --from=builder-containerd-shim /containerd-shim-wasmedge-v1 /assets/containerd-shim-wasmedge-v1
-COPY script/installer.sh /script/installer.sh
+COPY --link --from=builder-crun /crun/crun-* /assets/
+COPY --link --from=builder-crun /usr/local/lib/libwasmedge.so /assets/libwasmedge.so
+COPY --link --from=builder-crun /usr/local/lib/libwasmtime.so /assets/libwasmtime.so
+COPY --link --from=builder-containerd-shim /containerd-shim-slight-v1 /assets/containerd-shim-slight-v1
+COPY --link --from=builder-containerd-shim /containerd-shim-spin-v1 /assets/containerd-shim-spin-v1
+COPY --link --from=builder-containerd-shim /containerd-shim-wasmedge-v1 /assets/containerd-shim-wasmedge-v1
+#COPY --link --from=builder-containerd-shim-spin /containerd-wasm-shims/containerd-shim-spin-v1/target/release/containerd-shim-spin-v1 /assets/containerd-shim-spin-v1
 
 CMD sh /script/installer.sh wasmedge
