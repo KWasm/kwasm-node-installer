@@ -2,8 +2,8 @@ FROM ubuntu:18.04 as builder-crun
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y curl make git gcc build-essential pkgconf libtool libsystemd-dev libprotobuf-c-dev libcap-dev libseccomp-dev libyajl-dev go-md2man libtool autoconf python3 automake xz-utils \
-    && curl https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -p /usr/local --version=0.11.0 \
-    && git clone --depth 1 --branch 1.6 https://github.com/containers/crun.git \
+    && curl https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -p /usr/local --version=0.11.2 \
+    && git clone --depth 1 --branch 1.8.1 https://github.com/containers/crun.git \
     && cd crun \
     && ./autogen.sh \
     && ./configure --with-wasmedge --enable-embedded-yajl\
