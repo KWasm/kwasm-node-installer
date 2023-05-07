@@ -5,6 +5,7 @@ KWASM_DIR=/opt/kwasm
 
 CONTAINERD_CONF=/etc/containerd/config.toml
 IS_MICROK8S=false
+IS_K3S=false
 if ps aux | grep kubelet | grep -q snap/microk8s; then
     CONTAINERD_CONF=/var/snap/microk8s/current/args/containerd-template.toml
     IS_MICROK8S=true
@@ -14,6 +15,10 @@ if ps aux | grep kubelet | grep -q snap/microk8s; then
         echo "Installer seems to run on microk8s but 'containerd-template.toml' not found."
         exit 1
     fi
+elif ls $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml > /dev/null 2>&1 ; then
+    IS_K3S=true
+    cp $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+    CONTAINERD_CONF=/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 fi
 
 mkdir -p $NODE_ROOT$KWASM_DIR/bin/
@@ -45,26 +50,32 @@ elif ! $IS_MICROK8S; then
     ln -sf $KWASM_DIR/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/bin/
 fi
 
+CRI='"io.containerd.grpc.v1.cri"'
+if $IS_K3S; then
+    CRI='cri'
+fi
 if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then  
-    echo '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun]
+    echo '[plugins.'$CRI'.containerd.runtimes.crun]
     runtime_type = "io.containerd.runc.v2"
     pod_annotations = ["module.wasm.image/variant", "run.oci.handler"]
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun.options]
+[plugins.'$CRI'.containerd.runtimes.crun.options]
     BinaryName = "'$KWASM_DIR/bin/crun'"
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin]
+[plugins.'$CRI'.containerd.runtimes.spin]
     runtime_type = "io.containerd.spin.v1"
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmedge]
+[plugins.'$CRI'.containerd.runtimes.wasmedge]
     runtime_type = "io.containerd.wasmedge.v1"' >> $NODE_ROOT$CONTAINERD_CONF
     rm -Rf $NODE_ROOT$KWASM_DIR/opt/kwasm/active
 fi
 
 if [ ! -f $NODE_ROOT$KWASM_DIR/active ]; then
+    touch $NODE_ROOT$KWASM_DIR/active
     if $IS_MICROK8S; then
         nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- systemctl restart snap.microk8s.daemon-containerd
+    elif ls $NODE_ROOT/etc/init.d/k3s > /dev/null 2>&1 ; then
+        nsenter --target 1 --mount --uts --ipc --net -- /etc/init.d/k3s restart
     else
         nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- /bin/systemctl restart containerd
     fi
-    touch $NODE_ROOT$KWASM_DIR/active
 else
     echo "No change in containerd/config.toml"
 fi
