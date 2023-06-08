@@ -21,7 +21,7 @@ FROM ubuntu:18.04 as builder-containerd-shim
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y curl
 
-RUN curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.4.0/containerd-wasm-shims-v1-linux-$(uname -m).tar.gz | tar -xzf - \
+RUN curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.6.0/containerd-wasm-shims-v1-linux-$(uname -m).tar.gz | tar -xzf - \
     && curl -L https://github.com/second-state/runwasi/releases/download/v0.3.2/containerd-shim-wasmedge-v1-v0.3.2-linux-$(uname -m | sed s/aarch64/arm64/g | sed s/x86_64/amd64/g).tar.gz | tar -xzf -
 
 FROM ubuntu:18.04 as builder-containerd-shim-spin
