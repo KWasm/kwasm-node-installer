@@ -21,6 +21,15 @@ elif ls $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml > /dev/n
     CONTAINERD_CONF=/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 fi
 
+IS_ALPINE=false
+CRUN_WASMEDGE=crun-wasmedge
+LIB_WASMEDGE=libwasmedge.so
+if grep -iq alpine $NODE_ROOT/etc/issue 2>/dev/null ; then
+    IS_ALPINE=true
+    CRUN_WASMEDGE=crun-wasmedge-musl
+    LIB_WASMEDGE=libwasmedge-musl.so
+fi
+
 mkdir -p $NODE_ROOT$KWASM_DIR/bin/
 mkdir -p $NODE_ROOT$KWASM_DIR/lib/
 case $1 in
@@ -31,8 +40,8 @@ case $1 in
         ;;
     *)
     #wasmedge)
-        cp /assets/crun-wasmedge $NODE_ROOT$KWASM_DIR/bin/crun && \
-        cp /assets/libwasmedge.so $NODE_ROOT$KWASM_DIR/lib/libwasmedge.so && \
+        cp /assets/$CRUN_WASMEDGE $NODE_ROOT$KWASM_DIR/bin/crun && \
+        cp /assets/$LIB_WASMEDGE $NODE_ROOT$KWASM_DIR/lib/libwasmedge.so && \
         ln -sf $KWASM_DIR/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so && \
         ln -sf $KWASM_DIR/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so.0 && \
         ln -sf $KWASM_DIR/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so.0.0.0
@@ -72,6 +81,9 @@ if [ ! -f $NODE_ROOT$KWASM_DIR/active ]; then
     if $IS_MICROK8S; then
         nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- systemctl restart snap.microk8s.daemon-containerd
     elif ls $NODE_ROOT/etc/init.d/k3s > /dev/null 2>&1 ; then
+        if $IS_ALPINE ; then
+            nsenter --target 1 --mount --uts --ipc --net -- sh -c "which apk && apk add libseccomp lld-libs"
+        fi
         nsenter --target 1 --mount --uts --ipc --net -- /etc/init.d/k3s restart
     else
         nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- /bin/systemctl restart containerd
