@@ -28,6 +28,7 @@ if grep -iq alpine $NODE_ROOT/etc/issue 2>/dev/null ; then
     IS_ALPINE=true
     CRUN_WASMEDGE=crun-wasmedge-musl
     LIB_WASMEDGE=libwasmedge-musl.so
+    nsenter --target 1 --mount --uts --ipc --net -- sh -c "which apk && apk add libseccomp lld-libs"
 fi
 
 mkdir -p $NODE_ROOT$KWASM_DIR/bin/
@@ -80,10 +81,9 @@ if [ ! -f $NODE_ROOT$KWASM_DIR/active ]; then
     touch $NODE_ROOT$KWASM_DIR/active
     if $IS_MICROK8S; then
         nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- systemctl restart snap.microk8s.daemon-containerd
+    elif ls $NODE_ROOT/etc/init.d/containerd > /dev/null 2>&1 ; then
+        nsenter --target 1 --mount --uts --ipc --net -- /etc/init.d/containerd restart
     elif ls $NODE_ROOT/etc/init.d/k3s > /dev/null 2>&1 ; then
-        if $IS_ALPINE ; then
-            nsenter --target 1 --mount --uts --ipc --net -- sh -c "which apk && apk add libseccomp lld-libs"
-        fi
         nsenter --target 1 --mount --uts --ipc --net -- /etc/init.d/k3s restart
     else
         nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- /bin/systemctl restart containerd
