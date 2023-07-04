@@ -51,20 +51,23 @@ esac
 
 cp /assets/containerd-shim-spin-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-spin-v1
 cp /assets/containerd-shim-wasmedge-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-wasmedge-v1
+cp /assets/containerd-shim-wws-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-wws-v1
 if [ -f $NODE_ROOT/usr/local/bin/containerd-shim-spin-v1 ]; then
     # Replace existing spin shim on Azure AKS nodes
     ln -sf $KWASM_DIR/bin/containerd-shim-spin-v1 $NODE_ROOT/usr/local/bin/containerd-shim-spin-v1
     ln -sf $KWASM_DIR/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/usr/local/bin/containerd-shim-wasmedge-v1
+    ln -sf $KWASM_DIR/bin/containerd-shim-wws-v1 $NODE_ROOT/usr/local/bin/containerd-shim-wws-v1
 elif ! $IS_MICROK8S; then
     ln -sf $KWASM_DIR/bin/containerd-shim-spin-v1 $NODE_ROOT/bin/
     ln -sf $KWASM_DIR/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/bin/
+    ln -sf $KWASM_DIR/bin/containerd-shim-wws-v1 $NODE_ROOT/bin/
 fi
 
 CRI='"io.containerd.grpc.v1.cri"'
 if $IS_K3S; then
     CRI='cri'
 fi
-if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then  
+if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then
     echo '[plugins.'$CRI'.containerd.runtimes.crun]
     runtime_type = "io.containerd.runc.v2"
     pod_annotations = ["module.wasm.image/variant", "run.oci.handler"]
@@ -73,7 +76,9 @@ if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then
 [plugins.'$CRI'.containerd.runtimes.spin]
     runtime_type = "io.containerd.spin.v1"
 [plugins.'$CRI'.containerd.runtimes.wasmedge]
-    runtime_type = "io.containerd.wasmedge.v1"' >> $NODE_ROOT$CONTAINERD_CONF
+    runtime_type = "io.containerd.wasmedge.v1"
+[plugins.'$CRI'.containerd.runtimes.wws]
+    runtime_type = "io.containerd.wws.v1"' >> $NODE_ROOT$CONTAINERD_CONF
     rm -Rf $NODE_ROOT$KWASM_DIR/opt/kwasm/active
 fi
 
