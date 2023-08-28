@@ -64,9 +64,9 @@ elif ! $IS_MICROK8S; then
 fi
 
 CRI='"io.containerd.grpc.v1.cri"'
-if $IS_K3S; then
-    CRI='cri'
-fi
+#if $IS_K3S; then
+#    CRI='cri'
+#fi
 if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then
     echo '[plugins.'$CRI'.containerd.runtimes.crun]
     runtime_type = "io.containerd.runc.v2"
