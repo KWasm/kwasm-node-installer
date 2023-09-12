@@ -21,64 +21,28 @@ elif ls $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml > /dev/n
     CONTAINERD_CONF=/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 fi
 
-IS_ALPINE=false
-CRUN_WASMEDGE=crun-wasmedge
-LIB_WASMEDGE=libwasmedge.so
-if grep -iq alpine $NODE_ROOT/etc/issue 2>/dev/null ; then
-    IS_ALPINE=true
-    CRUN_WASMEDGE=crun-wasmedge-musl
-    LIB_WASMEDGE=libwasmedge-musl.so
-    nsenter --target 1 --mount --uts --ipc --net -- sh -c "which apk && apk add libseccomp lld-libs"
-fi
-
 mkdir -p $NODE_ROOT$KWASM_DIR/bin/
-mkdir -p $NODE_ROOT$KWASM_DIR/lib/
-case $1 in
-    wasmtime)
-        cp /assets/crun-wasmtime $NODE_ROOT$KWASM_DIR/bin/crun && \
-        cp /assets/libwasmtime.so $NODE_ROOT$KWASM_DIR/lib/libwasmtime.so && \
-        ln -sf $KWASM_DIR/lib/libwasmtime.so $NODE_ROOT/lib/libwasmtime.so
-        ;;
-    *)
-    #wasmedge)
-        cp /assets/$CRUN_WASMEDGE $NODE_ROOT$KWASM_DIR/bin/crun && \
-        cp /assets/$LIB_WASMEDGE $NODE_ROOT$KWASM_DIR/lib/libwasmedge.so && \
-        ln -sf $KWASM_DIR/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so && \
-        ln -sf $KWASM_DIR/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so.0 && \
-        ln -sf $KWASM_DIR/lib/libwasmedge.so $NODE_ROOT/lib/libwasmedge.so.0.0.0
-        ;;
-esac
 
-cp /assets/containerd-shim-spin-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-spin-v1
-cp /assets/containerd-shim-wasmedge-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-wasmedge-v1
-cp /assets/containerd-shim-wws-v1 $NODE_ROOT$KWASM_DIR/bin/containerd-shim-wws-v1
-if [ -f $NODE_ROOT/usr/local/bin/containerd-shim-spin-v1 ]; then
-    # Replace existing spin shim on Azure AKS nodes
-    ln -sf $KWASM_DIR/bin/containerd-shim-spin-v1 $NODE_ROOT/usr/local/bin/containerd-shim-spin-v1
-    ln -sf $KWASM_DIR/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/usr/local/bin/containerd-shim-wasmedge-v1
-    ln -sf $KWASM_DIR/bin/containerd-shim-wws-v1 $NODE_ROOT/usr/local/bin/containerd-shim-wws-v1
-elif ! $IS_MICROK8S; then
-    ln -sf $KWASM_DIR/bin/containerd-shim-spin-v1 $NODE_ROOT/bin/
-    ln -sf $KWASM_DIR/bin/containerd-shim-wasmedge-v1 $NODE_ROOT/bin/
-    ln -sf $KWASM_DIR/bin/containerd-shim-wws-v1 $NODE_ROOT/bin/
-fi
+cp /assets/containerd-shim-* $NODE_ROOT$KWASM_DIR/bin/
 
-CRI='"io.containerd.grpc.v1.cri"'
-#if $IS_K3S; then
-#    CRI='cri'
-#fi
+# TODO check if runtime config is already present
 if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then
-    echo '[plugins.'$CRI'.containerd.runtimes.crun]
-    runtime_type = "io.containerd.runc.v2"
-    pod_annotations = ["module.wasm.image/variant", "run.oci.handler"]
-[plugins.'$CRI'.containerd.runtimes.crun.options]
-    BinaryName = "'$KWASM_DIR/bin/crun'"
-[plugins.'$CRI'.containerd.runtimes.spin]
-    runtime_type = "io.containerd.spin.v1"
-[plugins.'$CRI'.containerd.runtimes.wasmedge]
-    runtime_type = "io.containerd.wasmedge.v1"
-[plugins.'$CRI'.containerd.runtimes.wws]
-    runtime_type = "io.containerd.wws.v1"' >> $NODE_ROOT$CONTAINERD_CONF
+    echo '
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.lunatic]
+    runtime_type = "/opt/kwasm/bin/containerd-shim-lunatic-v1"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.slight]
+    runtime_type = "/opt/kwasm/bin/containerd-shim-slight-v1"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin]
+    runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wws]
+    runtime_type = "/opt/kwasm/bin/containerd-shim-wws-v1"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmedge]
+    runtime_type = "/opt/kwasm/bin/containerd-shim-wasmedge-v1"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmer]
+    runtime_type = "/opt/kwasm/bin/containerd-shim-wasmer-v1"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmtime]
+    runtime_type = "/opt/kwasm/bin/containerd-shim-wasmtime-v1"
+' >> $NODE_ROOT$CONTAINERD_CONF
     rm -Rf $NODE_ROOT$KWASM_DIR/opt/kwasm/active
 fi
 

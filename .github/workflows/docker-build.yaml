@@ -23,10 +23,10 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - 
         name: Log in to the Container registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -34,7 +34,7 @@ jobs:
       - 
         name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
       - 
@@ -45,13 +45,21 @@ jobs:
         # Setup docker build to use your Namespace workspace builder
         name: Set up Namespace Buildx
         uses: namespacelabs/nscloud-setup-buildx-action@v0
+      - name: Build runwasi as static muls for amd64 and arm64
+        run: |
+          git clone https://github.com/containerd/runwasi.git &&
+          cd runwasi &&
+          docker build --platform=linux/arm64,linux/amd64 --build-arg BASE_IMAGE=alpine --build-arg CRATE="containerd-shim-wasmtime,containerd-shim-wasmedge,containerd-shim-wasmer" -t nscr.io/a8fcp47vcfori/build-runwasi --push . &&
+          cd -
       - 
         name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            CONTAINERD_RUNWASI=nscr.io/a8fcp47vcfori/build-runwasi
           tags: ${{ steps.meta.outputs.tags }}
           file: images/installer/Dockerfile
           labels: ${{ steps.meta.outputs.labels }}
