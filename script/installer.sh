@@ -26,24 +26,24 @@ mkdir -p $NODE_ROOT$KWASM_DIR/bin/
 cp /assets/containerd-shim-* $NODE_ROOT$KWASM_DIR/bin/
 
 # TODO check if runtime config is already present
-if ! grep -q crun $NODE_ROOT$CONTAINERD_CONF; then
+if ! grep -q wasmtime $NODE_ROOT$CONTAINERD_CONF; then
     echo '
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.lunatic]
-    runtime_type = "/opt/kwasm/bin/containerd-shim-lunatic-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-lunatic-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.slight]
-    runtime_type = "/opt/kwasm/bin/containerd-shim-slight-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-slight-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin]
-    runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-spin-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wws]
-    runtime_type = "/opt/kwasm/bin/containerd-shim-wws-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-wws-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmedge]
-    runtime_type = "/opt/kwasm/bin/containerd-shim-wasmedge-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-wasmedge-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmer]
-    runtime_type = "/opt/kwasm/bin/containerd-shim-wasmer-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-wasmer-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmtime]
-    runtime_type = "/opt/kwasm/bin/containerd-shim-wasmtime-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-wasmtime-v1"
 ' >> $NODE_ROOT$CONTAINERD_CONF
-    rm -Rf $NODE_ROOT$KWASM_DIR/opt/kwasm/active
+    rm -Rf $NODE_ROOT$KWASM_DIR/active
 fi
 
 if [ ! -f $NODE_ROOT$KWASM_DIR/active ]; then
