@@ -21,7 +21,7 @@ spec:
             name: entrypoint
             defaultMode: 0744
       containers:
-        - image: ghcr.io/kwasm/kwasm-node-installer:pr-42
+        - image: ghcr.io/kwasm/kwasm-node-installer:master
           name: kwasm-initializer
           env:
             - name: NODE_ROOT
