@@ -1,8 +1,8 @@
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
-  name: crun
-handler: crun
+  name: wasmedge
+handler: wasmedge
 ---
 apiVersion: batch/v1
 kind: Job
@@ -21,5 +21,5 @@ spec:
         name: wasm-test
         resources: {}
       restartPolicy: Never
-      runtimeClassName: crun
+      runtimeClassName: wasmedge
   backoffLimit: 1
