@@ -1,5 +1,7 @@
 # KWasm-node-installer
 
+> A Go version of this installer is developed at the [go-rewrite](https://github.com/KWasm/kwasm-node-installer/tree/go-rewrite) branch.
+
 The KWasm Node Installer is a container image that contains binaries and configuration to enable a Kubernetes node to run pure webassembly images.
 
 > WARNING: Not meant to be used in production!
@@ -12,13 +14,13 @@ Since this installer changes the configuration of the node it can make a node un
 - MicroK8s
 - Azure AKS
 - GCP GKE (Ubuntu Nodes)
+- AWS EKS (AmazonLinux2)
 - AWS EKS (Ubuntu Nodes)
 - Digital Ocean Kubernetes
 
 ## Currently not supported Kubernetes distributions
-- K3d
-- AWS EKS
 - OCI OKE
+- OpenShift
 
 ## Quickstart
 ### KinD
