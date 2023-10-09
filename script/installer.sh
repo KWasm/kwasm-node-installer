@@ -6,6 +6,7 @@ KWASM_DIR=/opt/kwasm
 CONTAINERD_CONF=/etc/containerd/config.toml
 IS_MICROK8S=false
 IS_K3S=false
+IS_RKE2_AGENT=false
 if ps aux | grep kubelet | grep -q snap/microk8s; then
     CONTAINERD_CONF=/var/snap/microk8s/current/args/containerd-template.toml
     IS_MICROK8S=true
@@ -15,6 +16,10 @@ if ps aux | grep kubelet | grep -q snap/microk8s; then
         echo "Installer seems to run on microk8s but 'containerd-template.toml' not found."
         exit 1
     fi
+elif ls $NODE_ROOT/var/lib/rancher/rke2/agent/etc/containerd/config.toml > /dev/null 2>&1 ; then
+    IS_RKE2_AGENT=true
+    cp $NODE_ROOT/var/lib/rancher/rke2/agent/etc/containerd/config.toml $NODE_ROOT/var/lib/rancher/rke2/agent/etc/containerd/config.toml.tmpl
+    CONTAINERD_CONF=/var/lib/rancher/rke2/agent/etc/containerd/config.toml.tmpl
 elif ls $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml > /dev/null 2>&1 ; then
     IS_K3S=true
     cp $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml $NODE_ROOT/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
@@ -54,6 +59,8 @@ if [ ! -f $NODE_ROOT$KWASM_DIR/active ]; then
         nsenter --target 1 --mount --uts --ipc --net -- /etc/init.d/containerd restart
     elif ls $NODE_ROOT/etc/init.d/k3s > /dev/null 2>&1 ; then
         nsenter --target 1 --mount --uts --ipc --net -- /etc/init.d/k3s restart
+    elif $IS_RKE2_AGENT; then
+        nsenter --target 1 --mount --uts --ipc --net -- /bin/systemctl restart rke2-agent
     else
         nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- /bin/systemctl restart containerd
     fi
