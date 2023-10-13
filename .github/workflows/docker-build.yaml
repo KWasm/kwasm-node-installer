@@ -47,9 +47,8 @@ jobs:
         uses: namespacelabs/nscloud-setup-buildx-action@v0
       - name: Build runwasi as static muls for amd64 and arm64
         run: |
-          git clone --branch containerd-shim-wasm/v0.3.0 --depth 1 https://github.com/containerd/runwasi.git &&
+          git clone --branch main --depth 1 https://github.com/containerd/runwasi.git &&
           cd runwasi &&
-          rm Cargo.lock &&
           docker build --platform=linux/arm64,linux/amd64 --build-arg BASE_IMAGE=alpine --build-arg CRATE="containerd-shim-wasmtime,containerd-shim-wasmedge,containerd-shim-wasmer" -t nscr.io/a8fcp47vcfori/build-runwasi --push . &&
           cd -
       - 
