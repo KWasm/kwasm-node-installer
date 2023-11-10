@@ -38,7 +38,7 @@ if ! grep -q wasmtime $NODE_ROOT$CONTAINERD_CONF; then
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.slight]
     runtime_type = "'$KWASM_DIR'/bin/containerd-shim-slight-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin]
-    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-spin-v1"
+    runtime_type = "'$KWASM_DIR'/bin/containerd-shim-spin-v2"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wws]
     runtime_type = "'$KWASM_DIR'/bin/containerd-shim-wws-v1"
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.wasmedge]
