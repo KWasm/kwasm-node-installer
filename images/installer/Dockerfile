@@ -17,10 +17,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y curl
 
 RUN mkdir /assets \
-    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.2/containerd-wasm-shims-v1-lunatic-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets \
-    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.2/containerd-wasm-shims-v1-slight-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets \
-    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.2/containerd-wasm-shims-v1-spin-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets \
-    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.2/containerd-wasm-shims-v1-wws-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets
+    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.3/containerd-wasm-shims-v1-lunatic-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets \
+    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.3/containerd-wasm-shims-v1-slight-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets \
+    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.3/containerd-wasm-shims-v1-spin-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets \
+    && curl -L https://github.com/deislabs/containerd-wasm-shims/releases/download/v0.9.3/containerd-wasm-shims-v1-wws-linux-$(uname -m).tar.gz  | tar -xzf - -C /assets
 
 
 FROM busybox
