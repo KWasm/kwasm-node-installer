@@ -35,13 +35,15 @@ var uninstallCmd = &cobra.Command{
 		shimName := config.Runtime.Name
 		runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
 
+		containerdConfig := containerd.NewConfig(&config)
+
 		binPath, err := shim.Uninstall(&config, shimName)
 		if err != nil {
 			slog.Error("failed to uninstall shim", "shim", runtimeName, "error", err)
 			return
 		}
 
-		configPath, err := containerd.RemoveRuntime(&config, binPath)
+		configPath, err := containerdConfig.RemoveRuntime(binPath)
 		if err != nil {
 			slog.Error("failed to write containerd config", "shim", runtimeName, "path", configPath, "error", err)
 			return

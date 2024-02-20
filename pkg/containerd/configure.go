@@ -27,13 +27,23 @@ import (
 	"github.com/kwasm/kwasm-node-installer/pkg/shim"
 )
 
-func AddRuntime(config *config.Config, shimPath string) (string, error) {
+type Config struct {
+	config *config.Config
+}
+
+func NewConfig(globalConfig *config.Config) *Config {
+	return &Config{
+		config: globalConfig,
+	}
+}
+
+func (c *Config) AddRuntime(shimPath string) (string, error) {
 	runtimeName := shim.RuntimeName(path.Base(shimPath))
 
 	cfg := generateConfig(shimPath, runtimeName)
 
-	configPath := configDirectory(config)
-	configHostPath := config.PathWithHost(configPath)
+	configPath := configDirectory(c.config)
+	configHostPath := c.config.PathWithHost(configPath)
 
 	// Containerd config file needs to exist, otherwise return the error
 	data, err := os.ReadFile(configHostPath)
@@ -66,13 +76,13 @@ func AddRuntime(config *config.Config, shimPath string) (string, error) {
 	return configPath, nil
 }
 
-func RemoveRuntime(config *config.Config, shimPath string) (string, error) {
+func (c *Config) RemoveRuntime(shimPath string) (string, error) {
 	runtimeName := shim.RuntimeName(path.Base(shimPath))
 
 	cfg := generateConfig(shimPath, runtimeName)
 
-	configPath := configDirectory(config)
-	configHostPath := config.PathWithHost(configPath)
+	configPath := configDirectory(c.config)
+	configHostPath := c.config.PathWithHost(configPath)
 
 	// Containerd config file needs to exist, otherwise return the error
 	data, err := os.ReadFile(configHostPath)
@@ -98,7 +108,6 @@ func RemoveRuntime(config *config.Config, shimPath string) (string, error) {
 }
 
 func configDirectory(config *config.Config) string {
-	//return path.Join(path.Dir(config.Runtime.ConfigPath), "conf.d")
 	return config.Runtime.ConfigPath
 }
 

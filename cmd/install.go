@@ -55,6 +55,8 @@ var installCmd = &cobra.Command{
 			config.Kwasm.AssetPath = path.Dir(config.Kwasm.AssetPath)
 		}
 
+		containerdConfig := containerd.NewConfig(&config)
+
 		anythingChanged := false
 		for _, file := range files {
 			fileName := file.Name()
@@ -68,7 +70,7 @@ var installCmd = &cobra.Command{
 			anythingChanged = anythingChanged || changed
 			slog.Info("shim installed", "shim", runtimeName, "path", binPath, "new-version", changed)
 
-			configPath, err := containerd.AddRuntime(&config, binPath)
+			configPath, err := containerdConfig.AddRuntime(binPath)
 			if err != nil {
 				slog.Error("failed to write containerd config", "shim", runtimeName, "path", configPath, "error", err)
 				return
@@ -82,7 +84,7 @@ var installCmd = &cobra.Command{
 		}
 
 		slog.Info("restarting containerd")
-		err = containerd.RestartRuntime()
+		err = containerdConfig.RestartRuntime()
 		if err != nil {
 			slog.Error("failed to restart containerd", "error", err)
 		}

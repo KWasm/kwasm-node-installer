@@ -24,7 +24,7 @@ import (
 	"github.com/mitchellh/go-ps"
 )
 
-func RestartRuntime() error {
+func (c *Config) RestartRuntime() error {
 	pid, err := getPid()
 	if err != nil {
 		return err
