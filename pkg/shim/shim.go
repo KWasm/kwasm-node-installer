@@ -16,7 +16,21 @@
 
 package shim
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/kwasm/kwasm-node-installer/pkg/config"
+)
+
+type Config struct {
+	config *config.Config
+}
+
+func NewConfig(globalConfig *config.Config) *Config {
+	return &Config{
+		config: globalConfig,
+	}
+}
 
 func RuntimeName(bin string) string {
 	return strings.TrimPrefix(bin, "containerd-shim-")

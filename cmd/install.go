@@ -56,13 +56,14 @@ var installCmd = &cobra.Command{
 		}
 
 		containerdConfig := containerd.NewConfig(&config)
+		shimConfig := shim.NewConfig(&config)
 
 		anythingChanged := false
 		for _, file := range files {
 			fileName := file.Name()
 			runtimeName := shim.RuntimeName(fileName)
 
-			binPath, changed, err := shim.Install(&config, fileName)
+			binPath, changed, err := shimConfig.Install(fileName)
 			if err != nil {
 				slog.Error("failed to install shim", "shim", runtimeName, "error", err)
 				return

@@ -22,18 +22,17 @@ import (
 	"os"
 	"path"
 
-	"github.com/kwasm/kwasm-node-installer/pkg/config"
 	"github.com/kwasm/kwasm-node-installer/pkg/state"
 )
 
-func Install(config *config.Config, shimName string) (string, bool, error) {
-	shimPath := config.AssetPath(shimName)
+func (c *Config) Install(shimName string) (string, bool, error) {
+	shimPath := c.config.AssetPath(shimName)
 	srcFile, err := os.OpenFile(shimPath, os.O_RDONLY, 0000)
 	if err != nil {
 		return "", false, err
 	}
-	dstFilePath := path.Join(config.Kwasm.Path, "bin", shimName)
-	dstFilePathHost := config.PathWithHost(dstFilePath)
+	dstFilePath := path.Join(c.config.Kwasm.Path, "bin", shimName)
+	dstFilePathHost := c.config.PathWithHost(dstFilePath)
 
 	err = os.MkdirAll(path.Dir(dstFilePathHost), 0755)
 	if err != nil {
@@ -45,7 +44,7 @@ func Install(config *config.Config, shimName string) (string, bool, error) {
 		return "", false, err
 	}
 
-	st, err := state.Get(config)
+	st, err := state.Get(c.config)
 	if err != nil {
 		return "", false, err
 	}

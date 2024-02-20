@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kwasm/kwasm-node-installer/pkg/config"
 	"github.com/kwasm/kwasm-node-installer/pkg/state"
 )
 
-func Uninstall(config *config.Config, shimName string) (string, error) {
+func (c *Config) Uninstall(shimName string) (string, error) {
 
-	st, err := state.Get(config)
+	st, err := state.Get(c.config)
 	if err != nil {
 		return "", err
 	}
@@ -19,7 +18,7 @@ func Uninstall(config *config.Config, shimName string) (string, error) {
 		return "", fmt.Errorf("shim '%s' not installed", shimName)
 	}
 	filePath := s.Path
-	filePathHost := config.PathWithHost(filePath)
+	filePathHost := c.config.PathWithHost(filePath)
 
 	err = os.Remove(filePathHost)
 	if err != nil {
