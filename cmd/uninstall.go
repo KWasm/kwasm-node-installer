@@ -38,7 +38,7 @@ var uninstallCmd = &cobra.Command{
 
 		rootFs := afero.NewOsFs()
 
-		containerdConfig := containerd.NewConfig(&config, rootFs)
+		containerdConfig := containerd.NewConfig(rootFs, config.Runtime.ConfigPath)
 		shimConfig := shim.NewConfig(&config, rootFs)
 
 		binPath, err := shimConfig.Uninstall(shimName)
@@ -47,9 +47,9 @@ var uninstallCmd = &cobra.Command{
 			return
 		}
 
-		configPath, err := containerdConfig.RemoveRuntime(binPath)
+		err = containerdConfig.RemoveRuntime(binPath)
 		if err != nil {
-			slog.Error("failed to write containerd config", "shim", runtimeName, "path", configPath, "error", err)
+			slog.Error("failed to write containerd config", "shim", runtimeName, "path", config.Runtime.ConfigPath, "error", err)
 			return
 		}
 	},

@@ -23,35 +23,31 @@ import (
 	"path"
 	"strings"
 
-	"github.com/kwasm/kwasm-node-installer/pkg/config"
 	"github.com/kwasm/kwasm-node-installer/pkg/shim"
 	"github.com/spf13/afero"
 )
 
 type Config struct {
-	config *config.Config
-	fs     afero.Fs
+	fs         afero.Fs
+	configPath string
 }
 
-func NewConfig(globalConfig *config.Config, fs afero.Fs) *Config {
+func NewConfig(fs afero.Fs, configPath string) *Config {
 	return &Config{
-		config: globalConfig,
-		fs:     fs,
+		fs:         fs,
+		configPath: configPath,
 	}
 }
 
-func (c *Config) AddRuntime(shimPath string) (string, error) {
+func (c *Config) AddRuntime(shimPath string) error {
 	runtimeName := shim.RuntimeName(path.Base(shimPath))
 
 	cfg := generateConfig(shimPath, runtimeName)
 
-	configPath := configDirectory(c.config)
-	configHostPath := c.config.PathWithHost(configPath)
-
 	// Containerd config file needs to exist, otherwise return the error
-	data, err := afero.ReadFile(c.fs, configHostPath)
+	data, err := afero.ReadFile(c.fs, c.configPath)
 	if err != nil {
-		return configPath, err
+		return err
 	}
 
 	// Fail if config.toml already contains the runtimeName
@@ -60,58 +56,51 @@ func (c *Config) AddRuntime(shimPath string) (string, error) {
 	if strings.Contains(string(data), runtimeName) {
 		//return configPath, fmt.Errorf("config file %s already contains runtime config for '%s'", configPath, runtimeName)
 		log.Printf("runtime '%s' already exists, skipping", runtimeName)
-		return configPath, nil
+		return nil
 	}
 
 	// Open file in append mode
-	file, err := c.fs.OpenFile(configHostPath, os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := c.fs.OpenFile(c.configPath, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return configPath, err
+		return err
 	}
 	defer file.Close()
 
 	// Append config
 	_, err = file.WriteString(cfg)
 	if err != nil {
-		return configPath, err
+		return err
 	}
 
-	return configPath, nil
+	return nil
 }
 
-func (c *Config) RemoveRuntime(shimPath string) (string, error) {
+func (c *Config) RemoveRuntime(shimPath string) error {
 	runtimeName := shim.RuntimeName(path.Base(shimPath))
 
 	cfg := generateConfig(shimPath, runtimeName)
 
-	configPath := configDirectory(c.config)
-	configHostPath := c.config.PathWithHost(configPath)
-
 	// Containerd config file needs to exist, otherwise return the error
-	data, err := afero.ReadFile(c.fs, configHostPath)
+	data, err := afero.ReadFile(c.fs, c.configPath)
 	if err != nil {
-		return configPath, err
+		return err
 	}
 
 	// Fail if config.toml does not contain the runtimeName
 	if !strings.Contains(string(data), runtimeName) {
-		return configPath, fmt.Errorf("config file %s does not contain a runtime config for '%s'", configPath, runtimeName)
+		return fmt.Errorf("config file %s does not contain a runtime config for '%s'", c.configPath, runtimeName)
 	}
 
 	// Convert the file data to a string and replace the target string with an empty string.
 	modifiedData := strings.Replace(string(data), cfg, "", -1)
 
 	// Write the modified data back to the file.
-	err = afero.WriteFile(c.fs, configHostPath, []byte(modifiedData), 0644)
+	err = afero.WriteFile(c.fs, c.configPath, []byte(modifiedData), 0644)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	return configPath, nil
-}
-
-func configDirectory(config *config.Config) string {
-	return config.Runtime.ConfigPath
+	return nil
 }
 
 func generateConfig(shimPath string, runtimeName string) string {

@@ -58,7 +58,7 @@ var installCmd = &cobra.Command{
 
 		rootFs := afero.NewOsFs()
 
-		containerdConfig := containerd.NewConfig(&config, rootFs)
+		containerdConfig := containerd.NewConfig(rootFs, config.Runtime.ConfigPath)
 		shimConfig := shim.NewConfig(&config, rootFs)
 
 		anythingChanged := false
@@ -74,12 +74,12 @@ var installCmd = &cobra.Command{
 			anythingChanged = anythingChanged || changed
 			slog.Info("shim installed", "shim", runtimeName, "path", binPath, "new-version", changed)
 
-			configPath, err := containerdConfig.AddRuntime(binPath)
+			err = containerdConfig.AddRuntime(binPath)
 			if err != nil {
-				slog.Error("failed to write containerd config", "shim", runtimeName, "path", configPath, "error", err)
+				slog.Error("failed to write containerd config", "shim", runtimeName, "path", config.Runtime.ConfigPath, "error", err)
 				return
 			}
-			slog.Info("shim configured", "shim", runtimeName, "path", configPath)
+			slog.Info("shim configured", "shim", runtimeName, "path", config.Runtime.ConfigPath)
 		}
 
 		if !anythingChanged {

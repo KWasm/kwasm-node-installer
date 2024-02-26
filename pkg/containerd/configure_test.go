@@ -17,18 +17,27 @@
 package containerd
 
 import (
+	"fmt"
+	"path/filepath"
 	"testing"
 
-	"github.com/kwasm/kwasm-node-installer/pkg/config"
 	"github.com/spf13/afero"
 )
 
-func newGlobalConfig(configFile string) *config.Config {
-	return &config.Config{
-		Runtime: struct {
-			Name       string
-			ConfigPath string
-		}{Name: "containerd", ConfigPath: configFile},
+func newTestFs(fixturePath string) afero.Fs {
+	baseFs := afero.NewBasePathFs(afero.NewOsFs(), filepath.Join("../..", fixturePath))
+	p, _ := baseFs.(*afero.BasePathFs).RealPath("/")
+	fmt.Println(filepath.Abs(p))
+	fs := afero.NewCopyOnWriteFs(baseFs, afero.NewMemMapFs())
+	return fs
+}
+
+func TestFs(t *testing.T) {
+	fs := newTestFs("testdata/containerd/valid")
+
+	_, err := fs.Stat("/etc/containerd/config.toml")
+	if err != nil {
+		t.Error(err)
 	}
 }
 
@@ -87,16 +96,13 @@ Foobar
 			}
 
 			c := &Config{
-				config: newGlobalConfig(tt.configFile),
-				fs:     fs,
+				configPath: "/etc/containerd/config.toml",
+				fs:         fs,
 			}
-			got, err := c.AddRuntime(tt.args.shimPath)
+			err := c.AddRuntime(tt.args.shimPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Config.AddRuntime() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if got != c.config.Runtime.ConfigPath {
-				t.Errorf("Config.AddRuntime() = %v, want %v", got, c.config.Runtime.ConfigPath)
 			}
 
 			if tt.wantErr {
