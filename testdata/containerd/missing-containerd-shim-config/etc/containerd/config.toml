@@ -1,28 +1,3 @@
-version = 2
-
-root = "/var/lib/containerd"
-state = "/run/containerd"
-oom_score = 0
-imports = ["/etc/containerd/runtime_*.toml", "./debug.toml"]
-
-[grpc]
-  address = "/run/containerd/containerd.sock"
-  uid = 0
-  gid = 0
-
-[debug]
-  address = "/run/containerd/debug.sock"
-  uid = 0
-  gid = 0
-  level = "info"
-
-[metrics]
-  address = ""
-  grpc_histogram = false
-
-[cgroup]
-  path = ""
-
 [plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
     no_prometheus = false

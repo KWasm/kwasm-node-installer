@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func newTestFs(fixturePath string) afero.Fs {
+func newFixtureFs(fixturePath string) afero.Fs {
 	baseFs := afero.NewBasePathFs(afero.NewOsFs(), filepath.Join("../..", fixturePath))
 	p, _ := baseFs.(*afero.BasePathFs).RealPath("/")
 	fmt.Println(filepath.Abs(p))
@@ -32,92 +32,96 @@ func newTestFs(fixturePath string) afero.Fs {
 	return fs
 }
 
-func TestFs(t *testing.T) {
-	fs := newTestFs("testdata/containerd/valid")
-
-	_, err := fs.Stat("/etc/containerd/config.toml")
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestConfig_AddRuntime(t *testing.T) {
+	type fields struct {
+		hostFs     afero.Fs
+		configPath string
+	}
 	type args struct {
 		shimPath string
 	}
 	tests := []struct {
-		name                     string
-		args                     args
-		configFile               string
-		initialConfigFileContent string
-		createFile               bool
-		wantErr                  bool
-		wantFileContent          string
+		name            string
+		fields          fields
+		args            args
+		wantErr         bool
+		wantFileErr     bool
+		wantFileContent string
 	}{
-		{"foobar", args{"/assets/foobar"}, "/etc/containerd/config.toml", "Hello World\n", true, false,
-			`Hello World
+		{"missing shim config", fields{
+			hostFs:     newFixtureFs("testdata/containerd/missing-containerd-shim-config"),
+			configPath: "/etc/containerd/config.toml",
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
+  [plugins."io.containerd.monitor.v1.cgroups"]
+    no_prometheus = false
+  [plugins."io.containerd.service.v1.diff-service"]
+    default = ["walking"]
+  [plugins."io.containerd.gc.v1.scheduler"]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = 0
+    startup_delay = "100ms"
+  [plugins."io.containerd.runtime.v2.task"]
+    platforms = ["linux/amd64"]
+    sched_core = true
+  [plugins."io.containerd.service.v1.tasks-service"]
+    blockio_config_file = ""
+    rdt_config_file = ""
 
-# KWASM runtime config for foobar
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.foobar]
-runtime_type = "/assets/foobar"
+# KWASM runtime config for spin-v1
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin-v1]
+runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 `},
-		{"foobar", args{"/assets/foobar"}, "/etc/config.toml", "", false, true, ``},
-		{"foobar", args{"/assets/foobar"}, "/etc/containerd/config.toml", `Hello World
+		{"missing config", fields{
+			hostFs:     newFixtureFs("testdata/containerd/missing-containerd-config"),
+			configPath: "/etc/containerd/config.toml",
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, true, ``},
+		{"existing shim config", fields{
+			hostFs:     newFixtureFs("testdata/containerd/existing-containerd-shim-config"),
+			configPath: "/etc/containerd/config.toml",
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
+  [plugins."io.containerd.monitor.v1.cgroups"]
+    no_prometheus = false
+  [plugins."io.containerd.service.v1.diff-service"]
+    default = ["walking"]
+  [plugins."io.containerd.gc.v1.scheduler"]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = 0
+    startup_delay = "100ms"
+  [plugins."io.containerd.runtime.v2.task"]
+    platforms = ["linux/amd64"]
+    sched_core = true
+  [plugins."io.containerd.service.v1.tasks-service"]
+    blockio_config_file = ""
+    rdt_config_file = ""
 
-# KWASM runtime config for foobar
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.foobar]
-runtime_type = "/assets/foobar"
-
-Foobar
-`, true, false,
-			`Hello World
-
-# KWASM runtime config for foobar
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.foobar]
-runtime_type = "/assets/foobar"
-
-Foobar
+# KWASM runtime config for spin-v1
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.spin-v1]
+runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 `},
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fs := afero.NewMemMapFs()
-			if tt.createFile {
-				file, err := fs.Create(tt.configFile)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				_, err = file.WriteString(tt.initialConfigFileContent)
-				if err != nil {
-					t.Fatal(err)
-				}
-			}
-
 			c := &Config{
-				configPath: "/etc/containerd/config.toml",
-				fs:         fs,
+				hostFs:     tt.fields.hostFs,
+				configPath: tt.fields.configPath,
 			}
-			err := c.AddRuntime(tt.args.shimPath)
-			if (err != nil) != tt.wantErr {
+			if err := c.AddRuntime(tt.args.shimPath); (err != nil) != tt.wantErr {
 				t.Errorf("Config.AddRuntime() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			gotContent, err := afero.ReadFile(c.hostFs, c.configPath)
+			if (err != nil) != tt.wantFileErr {
+				t.Errorf("read %s error = %v, wantFileErr %v", c.configPath, err, tt.wantFileErr)
 				return
 			}
 
-			if tt.wantErr {
-				return
+			if string(gotContent) != tt.wantFileContent {
+				t.Errorf("file content %s got = %s, want = %s", c.configPath, string(gotContent), tt.wantFileContent)
 			}
-
-			gotFileContent, err := afero.ReadFile(fs, tt.configFile)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if string(gotFileContent) != tt.wantFileContent {
-				t.Errorf("runtimeConfigFile content: %v, want %v", string(gotFileContent), tt.wantFileContent)
-			}
-
 		})
 	}
 }

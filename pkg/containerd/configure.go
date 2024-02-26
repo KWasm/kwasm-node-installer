@@ -28,13 +28,13 @@ import (
 )
 
 type Config struct {
-	fs         afero.Fs
+	hostFs     afero.Fs
 	configPath string
 }
 
-func NewConfig(fs afero.Fs, configPath string) *Config {
+func NewConfig(hostFs afero.Fs, configPath string) *Config {
 	return &Config{
-		fs:         fs,
+		hostFs:     hostFs,
 		configPath: configPath,
 	}
 }
@@ -45,7 +45,7 @@ func (c *Config) AddRuntime(shimPath string) error {
 	cfg := generateConfig(shimPath, runtimeName)
 
 	// Containerd config file needs to exist, otherwise return the error
-	data, err := afero.ReadFile(c.fs, c.configPath)
+	data, err := afero.ReadFile(c.hostFs, c.configPath)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (c *Config) AddRuntime(shimPath string) error {
 	}
 
 	// Open file in append mode
-	file, err := c.fs.OpenFile(c.configPath, os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := c.hostFs.OpenFile(c.configPath, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (c *Config) RemoveRuntime(shimPath string) error {
 	cfg := generateConfig(shimPath, runtimeName)
 
 	// Containerd config file needs to exist, otherwise return the error
-	data, err := afero.ReadFile(c.fs, c.configPath)
+	data, err := afero.ReadFile(c.hostFs, c.configPath)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (c *Config) RemoveRuntime(shimPath string) error {
 	modifiedData := strings.Replace(string(data), cfg, "", -1)
 
 	// Write the modified data back to the file.
-	err = afero.WriteFile(c.fs, c.configPath, []byte(modifiedData), 0644)
+	err = afero.WriteFile(c.hostFs, c.configPath, []byte(modifiedData), 0644)
 	if err != nil {
 		return err
 	}
