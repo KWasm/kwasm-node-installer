@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"path"
 
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/kwasm/kwasm-node-installer/pkg/containerd"
@@ -35,8 +36,10 @@ var uninstallCmd = &cobra.Command{
 		shimName := config.Runtime.Name
 		runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
 
+		rootFs := afero.NewOsFs()
+
 		containerdConfig := containerd.NewConfig(&config)
-		shimConfig := shim.NewConfig(&config)
+		shimConfig := shim.NewConfig(&config, rootFs)
 
 		binPath, err := shimConfig.Uninstall(shimName)
 		if err != nil {

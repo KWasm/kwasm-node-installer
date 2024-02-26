@@ -25,6 +25,7 @@ import (
 
 	"github.com/kwasm/kwasm-node-installer/pkg/containerd"
 	"github.com/kwasm/kwasm-node-installer/pkg/shim"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -55,8 +56,10 @@ var installCmd = &cobra.Command{
 			config.Kwasm.AssetPath = path.Dir(config.Kwasm.AssetPath)
 		}
 
+		rootFs := afero.NewOsFs()
+
 		containerdConfig := containerd.NewConfig(&config)
-		shimConfig := shim.NewConfig(&config)
+		shimConfig := shim.NewConfig(&config, rootFs)
 
 		anythingChanged := false
 		for _, file := range files {

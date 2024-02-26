@@ -20,15 +20,18 @@ import (
 	"strings"
 
 	"github.com/kwasm/kwasm-node-installer/pkg/config"
+	"github.com/spf13/afero"
 )
 
 type Config struct {
 	config *config.Config
+	fs     afero.Fs
 }
 
-func NewConfig(globalConfig *config.Config) *Config {
+func NewConfig(globalConfig *config.Config, fs afero.Fs) *Config {
 	return &Config{
 		config: globalConfig,
+		fs:     fs,
 	}
 }
 

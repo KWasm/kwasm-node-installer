@@ -27,19 +27,19 @@ import (
 
 func (c *Config) Install(shimName string) (string, bool, error) {
 	shimPath := c.config.AssetPath(shimName)
-	srcFile, err := os.OpenFile(shimPath, os.O_RDONLY, 0000)
+	srcFile, err := c.fs.OpenFile(shimPath, os.O_RDONLY, 0000)
 	if err != nil {
 		return "", false, err
 	}
 	dstFilePath := path.Join(c.config.Kwasm.Path, "bin", shimName)
 	dstFilePathHost := c.config.PathWithHost(dstFilePath)
 
-	err = os.MkdirAll(path.Dir(dstFilePathHost), 0755)
+	err = c.fs.MkdirAll(path.Dir(dstFilePathHost), 0775)
 	if err != nil {
 		return dstFilePath, false, err
 	}
 
-	dstFile, err := os.OpenFile(dstFilePathHost, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	dstFile, err := c.fs.OpenFile(dstFilePathHost, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return "", false, err
 	}
