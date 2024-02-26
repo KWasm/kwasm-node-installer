@@ -8,6 +8,7 @@ RUN go mod download
 COPY pkg ./pkg
 COPY cmd ./cmd
 COPY *.go ./
+COPY testdata ./testdata
 
 RUN go test ./...
 
