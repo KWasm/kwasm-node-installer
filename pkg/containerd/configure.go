@@ -18,7 +18,7 @@ package containerd
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path"
 	"strings"
@@ -55,7 +55,7 @@ func (c *Config) AddRuntime(shimPath string) error {
 	// Maybe skipping existing config?
 	if strings.Contains(string(data), runtimeName) {
 		//return configPath, fmt.Errorf("config file %s already contains runtime config for '%s'", configPath, runtimeName)
-		log.Printf("runtime '%s' already exists, skipping", runtimeName)
+		slog.Info(fmt.Sprintf("config for runtime '%s' already exists, skipping", runtimeName))
 		return nil
 	}
 

@@ -19,19 +19,22 @@ package shim
 import (
 	"strings"
 
-	"github.com/kwasm/kwasm-node-installer/pkg/config"
 	"github.com/spf13/afero"
 )
 
 type Config struct {
-	config *config.Config
-	fs     afero.Fs
+	rootFs    afero.Fs
+	hostFs    afero.Fs
+	assetPath string
+	kwasmPath string
 }
 
-func NewConfig(globalConfig *config.Config, fs afero.Fs) *Config {
+func NewConfig(rootFs afero.Fs, hostFs afero.Fs, assetPath string, kwasmPath string) *Config {
 	return &Config{
-		config: globalConfig,
-		fs:     fs,
+		rootFs:    rootFs,
+		hostFs:    hostFs,
+		assetPath: assetPath,
+		kwasmPath: kwasmPath,
 	}
 }
 

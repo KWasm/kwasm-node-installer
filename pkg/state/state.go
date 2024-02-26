@@ -6,22 +6,24 @@ import (
 	"errors"
 	"log/slog"
 	"os"
-	"path"
+	"path/filepath"
 
-	"github.com/kwasm/kwasm-node-installer/pkg/config"
+	"github.com/spf13/afero"
 )
 
 type state struct {
-	Shims  map[string]*Shim `json:"shims"`
-	config *config.Config
+	Shims        map[string]*Shim `json:"shims"`
+	fs           afero.Fs
+	lockFilePath string
 }
 
-func Get(config *config.Config) (*state, error) {
+func Get(fs afero.Fs, kwasmPath string) (*state, error) {
 	out := state{
-		Shims:  make(map[string]*Shim),
-		config: config,
+		Shims:        make(map[string]*Shim),
+		lockFilePath: filepath.Join(kwasmPath, "kwasm-lock.json"),
+		fs:           fs,
 	}
-	content, err := os.ReadFile(filePath(config))
+	content, err := afero.ReadFile(fs, out.lockFilePath)
 	if err == nil {
 		err := json.Unmarshal(content, &out)
 		return &out, err
@@ -58,9 +60,5 @@ func (l *state) Write() error {
 
 	slog.Info("writing lock file", "content", string(out))
 
-	return os.WriteFile(filePath(l.config), out, 0644)
-}
-
-func filePath(config *config.Config) string {
-	return config.PathWithHost(path.Join(config.Kwasm.Path, "kwasm-lock.json"))
+	return afero.WriteFile(l.fs, l.lockFilePath, out, 0644)
 }

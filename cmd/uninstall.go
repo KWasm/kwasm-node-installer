@@ -37,9 +37,10 @@ var uninstallCmd = &cobra.Command{
 		runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
 
 		rootFs := afero.NewOsFs()
+		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
 
-		containerdConfig := containerd.NewConfig(rootFs, config.Runtime.ConfigPath)
-		shimConfig := shim.NewConfig(&config, rootFs)
+		containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+		shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
 
 		binPath, err := shimConfig.Uninstall(shimName)
 		if err != nil {

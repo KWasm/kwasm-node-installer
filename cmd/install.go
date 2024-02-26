@@ -57,9 +57,10 @@ var installCmd = &cobra.Command{
 		}
 
 		rootFs := afero.NewOsFs()
+		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
 
-		containerdConfig := containerd.NewConfig(rootFs, config.Runtime.ConfigPath)
-		shimConfig := shim.NewConfig(&config, rootFs)
+		containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+		shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
 
 		anythingChanged := false
 		for _, file := range files {

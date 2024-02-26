@@ -21,30 +21,30 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/kwasm/kwasm-node-installer/pkg/state"
 )
 
 func (c *Config) Install(shimName string) (string, bool, error) {
-	shimPath := c.config.AssetPath(shimName)
-	srcFile, err := c.fs.OpenFile(shimPath, os.O_RDONLY, 0000)
+	shimPath := filepath.Join(c.assetPath, shimName)
+	srcFile, err := c.rootFs.OpenFile(shimPath, os.O_RDONLY, 0000)
 	if err != nil {
 		return "", false, err
 	}
-	dstFilePath := path.Join(c.config.Kwasm.Path, "bin", shimName)
-	dstFilePathHost := c.config.PathWithHost(dstFilePath)
+	dstFilePath := path.Join(c.kwasmPath, "bin", shimName)
 
-	err = c.fs.MkdirAll(path.Dir(dstFilePathHost), 0775)
+	err = c.hostFs.MkdirAll(path.Dir(dstFilePath), 0775)
 	if err != nil {
 		return dstFilePath, false, err
 	}
 
-	dstFile, err := c.fs.OpenFile(dstFilePathHost, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	dstFile, err := c.hostFs.OpenFile(dstFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return "", false, err
 	}
 
-	st, err := state.Get(c.config)
+	st, err := state.Get(c.hostFs, c.kwasmPath)
 	if err != nil {
 		return "", false, err
 	}
