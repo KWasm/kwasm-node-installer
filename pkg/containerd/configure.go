@@ -50,11 +50,8 @@ func (c *Config) AddRuntime(shimPath string) error {
 		return err
 	}
 
-	// Fail if config.toml already contains the runtimeName
-	// Prevents corrupt config but could lead to unexpcted fails for the user.
-	// Maybe skipping existing config?
+	// Warn if config.toml already contains runtimeName
 	if strings.Contains(string(data), runtimeName) {
-		//return configPath, fmt.Errorf("config file %s already contains runtime config for '%s'", configPath, runtimeName)
 		slog.Info(fmt.Sprintf("config for runtime '%s' already exists, skipping", runtimeName))
 		return nil
 	}
@@ -86,9 +83,10 @@ func (c *Config) RemoveRuntime(shimPath string) error {
 		return err
 	}
 
-	// Fail if config.toml does not contain the runtimeName
+	// Warn if config.toml does not contain the runtimeName
 	if !strings.Contains(string(data), runtimeName) {
-		return fmt.Errorf("config file %s does not contain a runtime config for '%s'", c.configPath, runtimeName)
+		slog.Warn(fmt.Sprintf("config for runtime '%s' does not exist, skipping", runtimeName))
+		return nil
 	}
 
 	// Convert the file data to a string and replace the target string with an empty string.
