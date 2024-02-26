@@ -9,6 +9,8 @@ COPY pkg ./pkg
 COPY cmd ./cmd
 COPY *.go ./
 
+RUN go test ./...
+
 RUN CGO_ENABLED=0 go build -o kwasm-node-installer
 RUN /app/kwasm-node-installer -h
 
