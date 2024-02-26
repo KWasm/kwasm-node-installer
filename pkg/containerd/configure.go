@@ -25,15 +25,18 @@ import (
 
 	"github.com/kwasm/kwasm-node-installer/pkg/config"
 	"github.com/kwasm/kwasm-node-installer/pkg/shim"
+	"github.com/spf13/afero"
 )
 
 type Config struct {
 	config *config.Config
+	fs     afero.Fs
 }
 
-func NewConfig(globalConfig *config.Config) *Config {
+func NewConfig(globalConfig *config.Config, fs afero.Fs) *Config {
 	return &Config{
 		config: globalConfig,
+		fs:     fs,
 	}
 }
 
@@ -46,7 +49,7 @@ func (c *Config) AddRuntime(shimPath string) (string, error) {
 	configHostPath := c.config.PathWithHost(configPath)
 
 	// Containerd config file needs to exist, otherwise return the error
-	data, err := os.ReadFile(configHostPath)
+	data, err := afero.ReadFile(c.fs, configHostPath)
 	if err != nil {
 		return configPath, err
 	}
@@ -61,7 +64,7 @@ func (c *Config) AddRuntime(shimPath string) (string, error) {
 	}
 
 	// Open file in append mode
-	file, err := os.OpenFile(configHostPath, os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := c.fs.OpenFile(configHostPath, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return configPath, err
 	}
@@ -85,7 +88,7 @@ func (c *Config) RemoveRuntime(shimPath string) (string, error) {
 	configHostPath := c.config.PathWithHost(configPath)
 
 	// Containerd config file needs to exist, otherwise return the error
-	data, err := os.ReadFile(configHostPath)
+	data, err := afero.ReadFile(c.fs, configHostPath)
 	if err != nil {
 		return configPath, err
 	}
@@ -99,7 +102,7 @@ func (c *Config) RemoveRuntime(shimPath string) (string, error) {
 	modifiedData := strings.Replace(string(data), cfg, "", -1)
 
 	// Write the modified data back to the file.
-	err = os.WriteFile(configHostPath, []byte(modifiedData), 0644)
+	err = afero.WriteFile(c.fs, configHostPath, []byte(modifiedData), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

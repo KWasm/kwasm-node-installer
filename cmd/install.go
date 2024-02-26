@@ -58,7 +58,7 @@ var installCmd = &cobra.Command{
 
 		rootFs := afero.NewOsFs()
 
-		containerdConfig := containerd.NewConfig(&config)
+		containerdConfig := containerd.NewConfig(&config, rootFs)
 		shimConfig := shim.NewConfig(&config, rootFs)
 
 		anythingChanged := false
