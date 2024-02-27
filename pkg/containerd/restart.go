@@ -24,6 +24,8 @@ import (
 	"github.com/mitchellh/go-ps"
 )
 
+var psProcesses = ps.Processes
+
 func (c *Config) RestartRuntime() error {
 	pid, err := getPid()
 	if err != nil {
@@ -40,9 +42,9 @@ func (c *Config) RestartRuntime() error {
 }
 
 func getPid() (int, error) {
-	processList, err := ps.Processes()
+	processList, err := psProcesses()
 	if err != nil {
-		slog.Info("ps.Processes() Failed, are you using windows?")
+		slog.Info("psProcesses() Failed, are you using windows?")
 		return -1, fmt.Errorf("could not get processes: %+v", err)
 	}
 
