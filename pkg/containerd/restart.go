@@ -42,27 +42,24 @@ func (c *Config) RestartRuntime() error {
 }
 
 func getPid() (int, error) {
-	processList, err := psProcesses()
+	processes, err := psProcesses()
 	if err != nil {
 		slog.Info("psProcesses() Failed, are you using windows?")
-		return -1, fmt.Errorf("could not get processes: %+v", err)
+		return 0, fmt.Errorf("could not get processes: %+v", err)
 	}
 
-	var containerdProcessList = []ps.Process{}
+	var containerdProcesses = []ps.Process{}
 
-	for x := range processList {
-		process := processList[x]
+	for _, process := range processes {
 		if process.Executable() == "containerd" {
-			containerdProcessList = append(containerdProcessList, process)
+			containerdProcesses = append(containerdProcesses, process)
 		}
 
 	}
 
-	if len(containerdProcessList) == 1 {
-		return containerdProcessList[0].Pid(), nil
-	} else if len(containerdProcessList) == 0 {
-		return -1, fmt.Errorf("no containerd process found")
+	if len(containerdProcesses) == 1 {
+		return containerdProcesses[0].Pid(), nil
 	} else {
-		panic("multiple containerd processes found")
+		return 0, fmt.Errorf("need exactly one containerd process, found: %d", len(containerdProcesses))
 	}
 }

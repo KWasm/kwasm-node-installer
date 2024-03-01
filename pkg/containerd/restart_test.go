@@ -34,7 +34,7 @@ func Test_getPid(t *testing.T) {
 	}{
 		{"no containerd process found", func() ([]ps.Process, error) {
 			return []ps.Process{}, nil
-		}, -1, true},
+		}, 0, true},
 		{"single containerd process found", func() ([]ps.Process, error) {
 			return []ps.Process{
 				&mockProcess{executable: "containerd", pid: 123},
@@ -48,7 +48,7 @@ func Test_getPid(t *testing.T) {
 		}, 0, true},
 		{"error getting processes", func() ([]ps.Process, error) {
 			return nil, fmt.Errorf("error getting processes")
-		}, -1, true},
+		}, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
