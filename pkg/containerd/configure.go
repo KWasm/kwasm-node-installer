@@ -72,7 +72,7 @@ func (c *Config) AddRuntime(shimPath string) error {
 	return nil
 }
 
-func (c *Config) RemoveRuntime(shimPath string) error {
+func (c *Config) RemoveRuntime(shimPath string) (changed bool, err error) {
 	runtimeName := shim.RuntimeName(path.Base(shimPath))
 
 	cfg := generateConfig(shimPath, runtimeName)
@@ -80,13 +80,13 @@ func (c *Config) RemoveRuntime(shimPath string) error {
 	// Containerd config file needs to exist, otherwise return the error
 	data, err := afero.ReadFile(c.hostFs, c.configPath)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Warn if config.toml does not contain the runtimeName
 	if !strings.Contains(string(data), runtimeName) {
 		slog.Warn(fmt.Sprintf("config for runtime '%s' does not exist, skipping", runtimeName))
-		return nil
+		return false, nil
 	}
 
 	// Convert the file data to a string and replace the target string with an empty string.
@@ -95,10 +95,10 @@ func (c *Config) RemoveRuntime(shimPath string) error {
 	// Write the modified data back to the file.
 	err = afero.WriteFile(c.hostFs, c.configPath, []byte(modifiedData), 0644)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
 func generateConfig(shimPath string, runtimeName string) string {

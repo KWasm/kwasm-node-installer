@@ -195,7 +195,7 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 				hostFs:     tt.fields.hostFs,
 				configPath: tt.fields.configPath,
 			}
-			if err := c.RemoveRuntime(tt.args.shimPath); (err != nil) != tt.wantErr {
+			if _, err := c.RemoveRuntime(tt.args.shimPath); (err != nil) != tt.wantErr {
 				t.Errorf("Config.RemoveRuntime() error = %v, wantErr %v", err, tt.wantErr)
 			}
 

@@ -17,7 +17,9 @@
 package cmd
 
 import (
+	"fmt"
 	"log/slog"
+	"os"
 	"path"
 
 	"github.com/spf13/afero"
@@ -32,40 +34,48 @@ var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall containerd shims",
 	Run: func(cmd *cobra.Command, args []string) {
-		slog.Info("uninstall called", "config", config)
-		shimName := config.Runtime.Name
-		runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
-
-		rootFs := afero.NewOsFs()
-		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
-
-		containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
-		shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
-
-		binPath, err := shimConfig.Uninstall(shimName)
-		if err != nil {
-			slog.Error("failed to uninstall shim", "shim", runtimeName, "error", err)
-			return
-		}
-
-		err = containerdConfig.RemoveRuntime(binPath)
-		if err != nil {
-			slog.Error("failed to write containerd config", "shim", runtimeName, "path", config.Runtime.ConfigPath, "error", err)
-			return
+		if err := runUninstall(cmd, args); err != nil {
+			slog.Error("failed to uninstall", "error", err)
+			os.Exit(1)
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(uninstallCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func runUninstall(_ *cobra.Command, _ []string) error {
+	slog.Info("uninstall called")
+	shimName := config.Runtime.Name
+	runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// uninstallCmd.PersistentFlags().String("foo", "", "A help for foo")
+	rootFs := afero.NewOsFs()
+	hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// uninstallCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
+
+	binPath, err := shimConfig.Uninstall(shimName)
+	if err != nil {
+		return fmt.Errorf("failed to delete shim '%s': %w", runtimeName, err)
+	}
+
+	configChanged, err := containerdConfig.RemoveRuntime(binPath)
+	if err != nil {
+		return fmt.Errorf("failed to write conteainerd config for shim '%s': %w", runtimeName, err)
+	}
+
+	if !configChanged {
+		slog.Info("nothing changed, nothing more to do")
+		return nil
+	}
+
+	slog.Info("restarting containerd")
+	err = containerdConfig.RestartRuntime()
+	if err != nil {
+		return fmt.Errorf("failed to restart containerd: %w", err)
+	}
+
+	return nil
 }

@@ -34,64 +34,9 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install containerd shims",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// Get file or directory information.
-		info, err := os.Stat(config.Kwasm.AssetPath)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		var files []fs.DirEntry
-		// Check if the path is a directory.
-		if info.IsDir() {
-			files, err = os.ReadDir(config.Kwasm.AssetPath)
-			if err != nil {
-				slog.Error(err.Error())
-				return
-			}
-		} else {
-			// If the path is not a directory, add the file to the list of files.
-			files = append(files, fs.FileInfoToDirEntry(info))
-			config.Kwasm.AssetPath = path.Dir(config.Kwasm.AssetPath)
-		}
-
-		rootFs := afero.NewOsFs()
-		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
-
-		containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
-		shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
-
-		anythingChanged := false
-		for _, file := range files {
-			fileName := file.Name()
-			runtimeName := shim.RuntimeName(fileName)
-
-			binPath, changed, err := shimConfig.Install(fileName)
-			if err != nil {
-				slog.Error("failed to install shim", "shim", runtimeName, "error", err)
-				return
-			}
-			anythingChanged = anythingChanged || changed
-			slog.Info("shim installed", "shim", runtimeName, "path", binPath, "new-version", changed)
-
-			err = containerdConfig.AddRuntime(binPath)
-			if err != nil {
-				slog.Error("failed to write containerd config", "shim", runtimeName, "path", config.Runtime.ConfigPath, "error", err)
-				return
-			}
-			slog.Info("shim configured", "shim", runtimeName, "path", config.Runtime.ConfigPath)
-		}
-
-		if !anythingChanged {
-			slog.Info("nothing changed, nothing more to do")
-			return
-		}
-
-		slog.Info("restarting containerd")
-		err = containerdConfig.RestartRuntime()
-		if err != nil {
-			slog.Error("failed to restart containerd", "error", err)
+		if err := runInstall(cmd, args); err != nil {
+			slog.Error("failed to install", "error", err)
+			os.Exit(1)
 		}
 	},
 }
@@ -99,4 +44,63 @@ var installCmd = &cobra.Command{
 func init() {
 	installCmd.Flags().StringVarP(&config.Kwasm.AssetPath, "asset-path", "a", "/assets", "Path to the asset to install")
 	rootCmd.AddCommand(installCmd)
+}
+
+func runInstall(_ *cobra.Command, _ []string) error {
+	// Get file or directory information.
+	info, err := os.Stat(config.Kwasm.AssetPath)
+	if err != nil {
+		return err
+	}
+
+	var files []fs.DirEntry
+	// Check if the path is a directory.
+	if info.IsDir() {
+		files, err = os.ReadDir(config.Kwasm.AssetPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		// If the path is not a directory, add the file to the list of files.
+		files = append(files, fs.FileInfoToDirEntry(info))
+		config.Kwasm.AssetPath = path.Dir(config.Kwasm.AssetPath)
+	}
+
+	rootFs := afero.NewOsFs()
+	hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
+
+	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
+
+	anythingChanged := false
+	for _, file := range files {
+		fileName := file.Name()
+		runtimeName := shim.RuntimeName(fileName)
+
+		binPath, changed, err := shimConfig.Install(fileName)
+		if err != nil {
+			return fmt.Errorf("failed to install shim '%s': %w", runtimeName, err)
+		}
+		anythingChanged = anythingChanged || changed
+		slog.Info("shim installed", "shim", runtimeName, "path", binPath, "new-version", changed)
+
+		err = containerdConfig.AddRuntime(binPath)
+		if err != nil {
+			return fmt.Errorf("failed to write containerd config: %w", err)
+		}
+		slog.Info("shim configured", "shim", runtimeName, "path", config.Runtime.ConfigPath)
+	}
+
+	if !anythingChanged {
+		slog.Info("nothing changed, nothing more to do")
+		return nil
+	}
+
+	slog.Info("restarting containerd")
+	err = containerdConfig.RestartRuntime()
+	if err != nil {
+		return fmt.Errorf("failed to restart containerd: %w", err)
+	}
+
+	return nil
 }
