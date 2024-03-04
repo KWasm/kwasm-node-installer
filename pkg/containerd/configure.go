@@ -41,6 +41,7 @@ func NewConfig(hostFs afero.Fs, configPath string) *Config {
 
 func (c *Config) AddRuntime(shimPath string) error {
 	runtimeName := shim.RuntimeName(path.Base(shimPath))
+	l := slog.With("runtime", runtimeName)
 
 	cfg := generateConfig(shimPath, runtimeName)
 
@@ -52,7 +53,7 @@ func (c *Config) AddRuntime(shimPath string) error {
 
 	// Warn if config.toml already contains runtimeName
 	if strings.Contains(string(data), runtimeName) {
-		slog.Info(fmt.Sprintf("config for runtime '%s' already exists, skipping", runtimeName))
+		l.Info("runtime config already exists, skipping")
 		return nil
 	}
 
@@ -74,6 +75,7 @@ func (c *Config) AddRuntime(shimPath string) error {
 
 func (c *Config) RemoveRuntime(shimPath string) (changed bool, err error) {
 	runtimeName := shim.RuntimeName(path.Base(shimPath))
+	l := slog.With("runtime", runtimeName)
 
 	cfg := generateConfig(shimPath, runtimeName)
 
@@ -85,7 +87,7 @@ func (c *Config) RemoveRuntime(shimPath string) (changed bool, err error) {
 
 	// Warn if config.toml does not contain the runtimeName
 	if !strings.Contains(string(data), runtimeName) {
-		slog.Warn(fmt.Sprintf("config for runtime '%s' does not exist, skipping", runtimeName))
+		l.Warn("runtime config does not exist, skipping")
 		return false, nil
 	}
 

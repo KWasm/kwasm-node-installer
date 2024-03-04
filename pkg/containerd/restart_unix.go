@@ -1,3 +1,6 @@
+//go:build unix
+// +build unix
+
 /*
    Copyright The KWasm Authors.
 
@@ -31,7 +34,7 @@ func (c *Config) RestartRuntime() error {
 	if err != nil {
 		return err
 	}
-	slog.Info("found containerd pid", "pid", pid)
+	slog.Debug("found containerd process", "pid", pid)
 
 	err = syscall.Kill(pid, syscall.SIGHUP)
 
@@ -44,7 +47,6 @@ func (c *Config) RestartRuntime() error {
 func getPid() (int, error) {
 	processes, err := psProcesses()
 	if err != nil {
-		slog.Info("psProcesses() Failed, are you using windows?")
 		return 0, fmt.Errorf("could not get processes: %+v", err)
 	}
 
