@@ -3,6 +3,8 @@
 
 package containerd
 
+import "errors"
+
 func (c *Config) RestartRuntime() error {
-	panic("restarting containerd not implemented")
+	return errors.New("restarting containerd not implemented")
 }
