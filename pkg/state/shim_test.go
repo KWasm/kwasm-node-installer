@@ -2,6 +2,8 @@ package state
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestShim_MarshalJSON(t *testing.T) {
@@ -24,13 +26,12 @@ func TestShim_MarshalJSON(t *testing.T) {
 				Path:   tt.fields.Path,
 			}
 			got, err := s.MarshalJSON()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Shim.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
 			}
-			if string(got) != string(tt.want) {
-				t.Errorf("Shim.MarshalJSON() = %v, want %v", string(got), tt.want)
-			}
+			require.Equal(t, tt.want, string(got))
 		})
 	}
 }
@@ -50,20 +51,21 @@ func TestShim_UnmarshalJSON(t *testing.T) {
 		wantErr bool
 	}{
 		{"default", args{`{"sha256":"6da5e8f17a9bfa9cb04cf22c87b6475394ecec3af4fdc337f72d6dbf3319ea52","path":"/opt/kwasm/bin/containerd-shim-spin-v1"}`}, wants{path: "/opt/kwasm/bin/containerd-shim-spin-v1", sha256: []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82}}, false},
-		// TODO: Add test cases.
+		{"broken sha", args{`{"sha256":"2","path":"/opt/kwasm/bin/containerd-shim-spin-v1"}`}, wants{path: "/opt/kwasm/bin/containerd-shim-spin-v1", sha256: nil}, true},
+		{"broken json", args{`broken`}, wants{path: "", sha256: nil}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := Shim{}
-			if err := s.UnmarshalJSON([]byte(tt.args.data)); (err != nil) != tt.wantErr {
-				t.Errorf("Shim.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			err := s.UnmarshalJSON([]byte(tt.args.data))
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
 			}
-			if string(s.Path) != string(tt.want.path) {
-				t.Errorf("path = %v, want %v", string(s.Path), tt.want.path)
-			}
-			if string(s.Sha256) != string(tt.want.sha256) {
-				t.Errorf("sha256 = %v, want %v", string(s.Sha256), tt.want.sha256)
-			}
+			require.Equal(t, tt.want.path, s.Path)
+			require.Equal(t, tt.want.sha256, s.Sha256)
 		})
 	}
 }
