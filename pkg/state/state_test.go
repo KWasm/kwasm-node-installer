@@ -20,10 +20,33 @@ func TestGet(t *testing.T) {
 		want    *state
 		wantErr bool
 	}{
-		{"existing state", args{tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"), "/opt/kwasm"}, &state{Shims: map[string]*Shim{
-			"spin-v1": {Sha256: []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82}, Path: "/opt/kwasm/bin/containerd-shim-spin-v1"},
-		}}, false},
-		{"missing state", args{tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"), "/opt/kwasm"}, &state{Shims: map[string]*Shim{}}, false},
+		{
+			"existing state",
+			args{
+				tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
+				"/opt/kwasm",
+			},
+			&state{
+				Shims: map[string]*Shim{
+					"spin-v1": {
+						Sha256: []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
+						Path:   "/opt/kwasm/bin/containerd-shim-spin-v1",
+					},
+				},
+			},
+			false,
+		},
+		{
+			"missing state",
+			args{
+				tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
+				"/opt/kwasm",
+			},
+			&state{
+				Shims: map[string]*Shim{},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -39,6 +62,11 @@ func TestGet(t *testing.T) {
 }
 
 func TestShimChanged(t *testing.T) {
+	type args struct {
+		shimName string
+		sha256   []byte
+		path     string
+	}
 	state := &state{
 		Shims: map[string]*Shim{
 			"spin-v1": {
@@ -49,46 +77,52 @@ func TestShimChanged(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		shimName   string
-		sha256     []byte
-		path       string
-		wantResult bool
+		name string
+		args args
+		want bool
 	}{
 		{
-			name:       "existing shim, same sha256 and path",
-			shimName:   "spin-v1",
-			sha256:     []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
-			path:       "/opt/kwasm/bin/containerd-shim-spin-v1",
-			wantResult: false,
+			"existing shim, same sha256 and path",
+			args{
+				"spin-v1",
+				[]byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
+				"/opt/kwasm/bin/containerd-shim-spin-v1",
+			},
+			false,
 		},
 		{
-			name:       "existing shim, different sha256",
-			shimName:   "spin-v1",
-			sha256:     []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 83},
-			path:       "/opt/kwasm/bin/containerd-shim-spin-v1",
-			wantResult: true,
+			"existing shim, different sha256",
+			args{
+				"spin-v1",
+				[]byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 83},
+				"/opt/kwasm/bin/containerd-shim-spin-v1",
+			},
+			true,
 		},
 		{
-			name:       "existing shim, different path",
-			shimName:   "spin-v1",
-			sha256:     []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
-			path:       "/opt/kwasm/bin/containerd-shim-spin-v2",
-			wantResult: true,
+			"existing shim, different path",
+			args{
+				"spin-v1",
+				[]byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
+				"/opt/kwasm/bin/containerd-shim-spin-v2",
+			},
+			true,
 		},
 		{
-			name:       "non-existing shim",
-			shimName:   "non-existing",
-			sha256:     []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
-			path:       "/opt/kwasm/bin/containerd-shim-spin-v1",
-			wantResult: true,
+			"non-existing shim",
+			args{
+				"non-existing",
+				[]byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
+				"/opt/kwasm/bin/containerd-shim-spin-v1",
+			},
+			true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := state.ShimChanged(tt.shimName, tt.sha256, tt.path)
-			assert.Equal(t, tt.wantResult, result)
+			changed := state.ShimChanged(tt.args.shimName, tt.args.sha256, tt.args.path)
+			assert.Equal(t, tt.want, changed)
 		})
 	}
 }

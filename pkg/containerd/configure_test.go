@@ -38,13 +38,12 @@ func TestConfig_AddRuntime(t *testing.T) {
 		fields          fields
 		args            args
 		wantErr         bool
-		wantFileErr     bool
 		wantFileContent string
 	}{
 		{"missing shim config", fields{
 			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
-		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
     no_prometheus = false
   [plugins."io.containerd.service.v1.diff-service"]
@@ -69,11 +68,11 @@ runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 		{"missing config", fields{
 			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-config"),
 			configPath: "/etc/containerd/config.toml",
-		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, true, ``},
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, ``},
 		{"existing shim config", fields{
 			hostFs:     tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
-		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
     no_prometheus = false
   [plugins."io.containerd.service.v1.diff-service"]
@@ -106,16 +105,13 @@ runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 
 			if tt.wantErr {
 				require.Error(t, err)
-			} else {
-				require.Nil(t, err)
+				return
 			}
 
+			require.Nil(t, err)
+
 			gotContent, err := afero.ReadFile(c.hostFs, c.configPath)
-			if tt.wantFileErr {
-				assert.Error(t, err)
-			} else {
-				assert.Nil(t, err)
-			}
+			require.Nil(t, err)
 
 			assert.Equal(t, tt.wantFileContent, string(gotContent))
 		})
@@ -135,13 +131,12 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 		fields          fields
 		args            args
 		wantErr         bool
-		wantFileErr     bool
 		wantFileContent string
 	}{
 		{"missing shim config", fields{
 			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
-		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
     no_prometheus = false
   [plugins."io.containerd.service.v1.diff-service"]
@@ -162,11 +157,11 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 		{"missing config", fields{
 			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-config"),
 			configPath: "/etc/containerd/config.toml",
-		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, true, ``},
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, ``},
 		{"existing shim config", fields{
 			hostFs:     tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
-		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
+		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
     no_prometheus = false
   [plugins."io.containerd.service.v1.diff-service"]
@@ -194,16 +189,13 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 			_, err := c.RemoveRuntime(tt.args.shimPath)
 			if tt.wantErr {
 				require.Error(t, err)
-			} else {
-				require.Nil(t, err)
+				return
 			}
 
+			require.Nil(t, err)
+
 			gotContent, err := afero.ReadFile(c.hostFs, c.configPath)
-			if tt.wantFileErr {
-				assert.Error(t, err)
-			} else {
-				assert.Nil(t, err)
-			}
+			require.Nil(t, err)
 
 			assert.Equal(t, tt.wantFileContent, string(gotContent))
 		})

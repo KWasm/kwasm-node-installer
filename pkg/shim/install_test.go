@@ -26,6 +26,10 @@ import (
 )
 
 func TestConfig_Install(t *testing.T) {
+	type wants struct {
+		filepath string
+		changed  bool
+	}
 	type fields struct {
 		rootFs    afero.Fs
 		hostFs    afero.Fs
@@ -39,8 +43,7 @@ func TestConfig_Install(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    string
-		want1   bool
+		want    wants
 		wantErr bool
 	}{
 		{
@@ -51,8 +54,10 @@ func TestConfig_Install(t *testing.T) {
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-spin-v1"},
-			"/opt/kwasm/bin/containerd-shim-spin-v1",
-			false,
+			wants{
+				"/opt/kwasm/bin/containerd-shim-spin-v1",
+				false,
+			},
 			false,
 		},
 		{
@@ -63,8 +68,10 @@ func TestConfig_Install(t *testing.T) {
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-slight-v1"},
-			"/opt/kwasm/bin/containerd-shim-slight-v1",
-			true,
+			wants{
+				"/opt/kwasm/bin/containerd-shim-slight-v1",
+				true,
+			},
 			false,
 		},
 		{
@@ -75,8 +82,10 @@ func TestConfig_Install(t *testing.T) {
 				"/assets",
 				"/opt/kwasm"},
 			args{"some-shim"},
-			"",
-			false,
+			wants{
+				"",
+				false,
+			},
 			true,
 		},
 		{
@@ -87,8 +96,10 @@ func TestConfig_Install(t *testing.T) {
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-spin-v1"},
-			"/opt/kwasm/bin/containerd-shim-spin-v1",
-			false,
+			wants{
+				"/opt/kwasm/bin/containerd-shim-spin-v1",
+				false,
+			},
 			true,
 		},
 	}
@@ -109,8 +120,8 @@ func TestConfig_Install(t *testing.T) {
 				require.Nil(t, err)
 			}
 
-			assert.Equal(t, tt.want, filepath)
-			assert.Equal(t, tt.want1, changed)
+			assert.Equal(t, tt.want.filepath, filepath)
+			assert.Equal(t, tt.want.changed, changed)
 		})
 	}
 }
