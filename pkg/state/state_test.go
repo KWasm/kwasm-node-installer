@@ -1,21 +1,13 @@
 package state
 
 import (
-	"fmt"
-	"path/filepath"
-	"reflect"
 	"testing"
 
+	"github.com/kwasm/kwasm-node-installer/tests"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
-
-func newFixtureFs(fixturePath string) afero.Fs {
-	baseFs := afero.NewBasePathFs(afero.NewOsFs(), filepath.Join("../..", fixturePath))
-	p, _ := baseFs.(*afero.BasePathFs).RealPath("/")
-	fmt.Println(filepath.Abs(p))
-	fs := afero.NewCopyOnWriteFs(baseFs, afero.NewMemMapFs())
-	return fs
-}
 
 func TestGet(t *testing.T) {
 	type args struct {
@@ -28,21 +20,20 @@ func TestGet(t *testing.T) {
 		want    *state
 		wantErr bool
 	}{
-		{"existing state", args{newFixtureFs("testdata/containerd/existing-containerd-shim-config"), "/opt/kwasm"}, &state{Shims: map[string]*Shim{
+		{"existing state", args{tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"), "/opt/kwasm"}, &state{Shims: map[string]*Shim{
 			"spin-v1": {Sha256: []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82}, Path: "/opt/kwasm/bin/containerd-shim-spin-v1"},
 		}}, false},
-		{"missing state", args{newFixtureFs("testdata/containerd/missing-containerd-shim-config"), "/opt/kwasm"}, &state{Shims: map[string]*Shim{}}, false},
+		{"missing state", args{tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"), "/opt/kwasm"}, &state{Shims: map[string]*Shim{}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := Get(tt.args.fs, tt.args.kwasmPath)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
 			}
-			if !reflect.DeepEqual(got.Shims, tt.want.Shims) {
-				t.Errorf("Get() = %v, want %v", got.Shims, tt.want.Shims)
-			}
+			assert.Equal(t, tt.want.Shims, got.Shims)
 		})
 	}
 }
@@ -97,9 +88,7 @@ func TestShimChanged(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := state.ShimChanged(tt.shimName, tt.sha256, tt.path)
-			if result != tt.wantResult {
-				t.Errorf("ShimChanged() = %v, want %v", result, tt.wantResult)
-			}
+			assert.Equal(t, tt.wantResult, result)
 		})
 	}
 }

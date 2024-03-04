@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/mitchellh/go-ps"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type mockProcess struct {
@@ -55,24 +57,16 @@ func Test_getPid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					if !tt.wantErr {
-						// If the test case does not expect an error, re-panic
-						panic(r)
-					}
-				}
-			}()
-
 			psProcesses = tt.psProccessesMock
 			got, err := getPid()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getPid() error = %v, wantErr %v", err, tt.wantErr)
-				return
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
 			}
-			if got != tt.want {
-				t.Errorf("getPid() = %v, want %v", got, tt.want)
-			}
+
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

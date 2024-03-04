@@ -17,20 +17,13 @@
 package shim
 
 import (
-	"fmt"
-	"path/filepath"
 	"testing"
 
+	"github.com/kwasm/kwasm-node-installer/tests"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
-
-func newFixtureFs(fixturePath string) afero.Fs {
-	baseFs := afero.NewBasePathFs(afero.NewOsFs(), filepath.Join("../..", fixturePath))
-	p, _ := baseFs.(*afero.BasePathFs).RealPath("/")
-	fmt.Println(filepath.Abs(p))
-	fs := afero.NewCopyOnWriteFs(baseFs, afero.NewMemMapFs())
-	return fs
-}
 
 func TestConfig_Install(t *testing.T) {
 	type fields struct {
@@ -53,8 +46,8 @@ func TestConfig_Install(t *testing.T) {
 		{
 			"no changes to shim",
 			fields{
-				newFixtureFs("testdata"),
-				newFixtureFs("testdata/shim"),
+				tests.FixtureFs("testdata"),
+				tests.FixtureFs("testdata/shim"),
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-spin-v1"},
@@ -65,8 +58,8 @@ func TestConfig_Install(t *testing.T) {
 		{
 			"install new shim over old",
 			fields{
-				newFixtureFs("testdata"),
-				newFixtureFs("testdata/shim"),
+				tests.FixtureFs("testdata"),
+				tests.FixtureFs("testdata/shim"),
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-slight-v1"},
@@ -78,7 +71,7 @@ func TestConfig_Install(t *testing.T) {
 			"unable to find new shim",
 			fields{
 				afero.NewMemMapFs(),
-				newFixtureFs("testdata/shim"),
+				tests.FixtureFs("testdata/shim"),
 				"/assets",
 				"/opt/kwasm"},
 			args{"some-shim"},
@@ -89,8 +82,8 @@ func TestConfig_Install(t *testing.T) {
 		{
 			"unable to write to hostFs",
 			fields{
-				newFixtureFs("testdata"),
-				afero.NewReadOnlyFs(newFixtureFs("testdata/shim")),
+				tests.FixtureFs("testdata"),
+				afero.NewReadOnlyFs(tests.FixtureFs("testdata/shim")),
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-spin-v1"},
@@ -108,18 +101,16 @@ func TestConfig_Install(t *testing.T) {
 				kwasmPath: tt.fields.kwasmPath,
 			}
 
-			got, got1, err := c.Install(tt.args.shimName)
+			filepath, changed, err := c.Install(tt.args.shimName)
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Config.Install() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
 			}
-			if got != tt.want {
-				t.Errorf("Config.Install() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("Config.Install() got1 = %v, want %v", got1, tt.want1)
-			}
+
+			assert.Equal(t, tt.want, filepath)
+			assert.Equal(t, tt.want1, changed)
 		})
 	}
 }

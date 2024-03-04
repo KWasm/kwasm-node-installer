@@ -3,6 +3,7 @@ package state
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,7 +32,7 @@ func TestShim_MarshalJSON(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 			}
-			require.Equal(t, tt.want, string(got))
+			assert.Equal(t, tt.want, string(got))
 		})
 	}
 }
@@ -64,8 +65,8 @@ func TestShim_UnmarshalJSON(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 			}
-			require.Equal(t, tt.want.path, s.Path)
-			require.Equal(t, tt.want.sha256, s.Sha256)
+			assert.Equal(t, tt.want.path, s.Path)
+			assert.Equal(t, tt.want.sha256, s.Sha256)
 		})
 	}
 }

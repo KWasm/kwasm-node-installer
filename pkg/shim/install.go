@@ -26,7 +26,7 @@ import (
 	"github.com/kwasm/kwasm-node-installer/pkg/state"
 )
 
-func (c *Config) Install(shimName string) (string, bool, error) {
+func (c *Config) Install(shimName string) (filePath string, changed bool, err error) {
 	shimPath := filepath.Join(c.assetPath, shimName)
 	srcFile, err := c.rootFs.OpenFile(shimPath, os.O_RDONLY, 0000)
 	if err != nil {
@@ -52,7 +52,7 @@ func (c *Config) Install(shimName string) (string, bool, error) {
 
 	_, err = io.Copy(io.MultiWriter(dstFile, shimSha256), srcFile)
 	runtimeName := RuntimeName(shimName)
-	changed := st.ShimChanged(runtimeName, shimSha256.Sum(nil), dstFilePath)
+	changed = st.ShimChanged(runtimeName, shimSha256.Sum(nil), dstFilePath)
 	if changed {
 		st.UpdateShim(runtimeName, state.Shim{
 			Path:   dstFilePath,

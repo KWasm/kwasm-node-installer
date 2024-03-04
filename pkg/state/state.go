@@ -58,7 +58,7 @@ func (l *state) Write() error {
 		return err
 	}
 
-	slog.Info("writing lock file", "content", string(out))
+	slog.Debug("writing lock file", "content", string(out))
 
 	return afero.WriteFile(l.fs, l.lockFilePath, out, 0644)
 }

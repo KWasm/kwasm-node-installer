@@ -17,20 +17,13 @@
 package containerd
 
 import (
-	"fmt"
-	"path/filepath"
 	"testing"
 
+	"github.com/kwasm/kwasm-node-installer/tests"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
-
-func newFixtureFs(fixturePath string) afero.Fs {
-	baseFs := afero.NewBasePathFs(afero.NewOsFs(), filepath.Join("../..", fixturePath))
-	p, _ := baseFs.(*afero.BasePathFs).RealPath("/")
-	fmt.Println(filepath.Abs(p))
-	fs := afero.NewCopyOnWriteFs(baseFs, afero.NewMemMapFs())
-	return fs
-}
 
 func TestConfig_AddRuntime(t *testing.T) {
 	type fields struct {
@@ -49,7 +42,7 @@ func TestConfig_AddRuntime(t *testing.T) {
 		wantFileContent string
 	}{
 		{"missing shim config", fields{
-			hostFs:     newFixtureFs("testdata/containerd/missing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
@@ -74,11 +67,11 @@ func TestConfig_AddRuntime(t *testing.T) {
 runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 `},
 		{"missing config", fields{
-			hostFs:     newFixtureFs("testdata/containerd/missing-containerd-config"),
+			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, true, ``},
 		{"existing shim config", fields{
-			hostFs:     newFixtureFs("testdata/containerd/existing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
@@ -109,19 +102,22 @@ runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 				hostFs:     tt.fields.hostFs,
 				configPath: tt.fields.configPath,
 			}
-			if err := c.AddRuntime(tt.args.shimPath); (err != nil) != tt.wantErr {
-				t.Errorf("Config.AddRuntime() error = %v, wantErr %v", err, tt.wantErr)
+			err := c.AddRuntime(tt.args.shimPath)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
 			}
 
 			gotContent, err := afero.ReadFile(c.hostFs, c.configPath)
-			if (err != nil) != tt.wantFileErr {
-				t.Errorf("read %s error = %v, wantFileErr %v", c.configPath, err, tt.wantFileErr)
-				return
+			if tt.wantFileErr {
+				assert.Error(t, err)
+			} else {
+				assert.Nil(t, err)
 			}
 
-			if string(gotContent) != tt.wantFileContent {
-				t.Errorf("file content %s got = %s, want = %s", c.configPath, string(gotContent), tt.wantFileContent)
-			}
+			assert.Equal(t, tt.wantFileContent, string(gotContent))
 		})
 	}
 }
@@ -143,7 +139,7 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 		wantFileContent string
 	}{
 		{"missing shim config", fields{
-			hostFs:     newFixtureFs("testdata/containerd/missing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
@@ -164,11 +160,11 @@ func TestConfig_RemoveRuntime(t *testing.T) {
     rdt_config_file = ""
 `},
 		{"missing config", fields{
-			hostFs:     newFixtureFs("testdata/containerd/missing-containerd-config"),
+			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, true, ``},
 		{"existing shim config", fields{
-			hostFs:     newFixtureFs("testdata/containerd/existing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
@@ -195,19 +191,21 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 				hostFs:     tt.fields.hostFs,
 				configPath: tt.fields.configPath,
 			}
-			if _, err := c.RemoveRuntime(tt.args.shimPath); (err != nil) != tt.wantErr {
-				t.Errorf("Config.RemoveRuntime() error = %v, wantErr %v", err, tt.wantErr)
+			_, err := c.RemoveRuntime(tt.args.shimPath)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
 			}
 
 			gotContent, err := afero.ReadFile(c.hostFs, c.configPath)
-			if (err != nil) != tt.wantFileErr {
-				t.Errorf("read %s error = %v, wantFileErr %v", c.configPath, err, tt.wantFileErr)
-				return
+			if tt.wantFileErr {
+				assert.Error(t, err)
+			} else {
+				assert.Nil(t, err)
 			}
 
-			if string(gotContent) != tt.wantFileContent {
-				t.Errorf("file content %s got = %s, want = %s", c.configPath, string(gotContent), tt.wantFileContent)
-			}
+			assert.Equal(t, tt.wantFileContent, string(gotContent))
 		})
 	}
 }
