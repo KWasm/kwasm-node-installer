@@ -33,8 +33,11 @@ import (
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install containerd shims",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := runInstall(cmd, args); err != nil {
+	Run: func(_ *cobra.Command, _ []string) {
+		rootFs := afero.NewOsFs()
+		hostFs := afero.NewBasePathFs(rootFs, conf.host.rootPath)
+
+		if err := runInstall(conf, rootFs, hostFs); err != nil {
 			slog.Error("failed to install", "error", err)
 			os.Exit(1)
 		}
@@ -46,7 +49,7 @@ func init() {
 	rootCmd.AddCommand(installCmd)
 }
 
-func runInstall(_ *cobra.Command, _ []string) error {
+func runInstall(conf config, rootFs, hostFs afero.Fs) error {
 	// Get file or directory information.
 	info, err := os.Stat(conf.kwasm.assetPath)
 	if err != nil {
@@ -65,9 +68,6 @@ func runInstall(_ *cobra.Command, _ []string) error {
 		files = append(files, fs.FileInfoToDirEntry(info))
 		conf.kwasm.assetPath = path.Dir(conf.kwasm.assetPath)
 	}
-
-	rootFs := afero.NewOsFs()
-	hostFs := afero.NewBasePathFs(rootFs, conf.host.rootPath)
 
 	containerdConfig := containerd.NewConfig(hostFs, conf.runtime.configPath)
 	shimConfig := shim.NewConfig(rootFs, hostFs, conf.kwasm.assetPath, conf.kwasm.path)
