@@ -36,8 +36,9 @@ var uninstallCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 		rootFs := afero.NewOsFs()
 		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
+		restarter := containerd.ContainerdRestarter{}
 
-		if err := runUninstall(config, rootFs, hostFs); err != nil {
+		if err := RunUninstall(config, rootFs, hostFs, restarter); err != nil {
 			slog.Error("failed to uninstall", "error", err)
 			os.Exit(1)
 		}
@@ -48,12 +49,12 @@ func init() {
 	rootCmd.AddCommand(uninstallCmd)
 }
 
-func runUninstall(config Config, rootFs, hostFs afero.Fs) error {
+func RunUninstall(config Config, rootFs, hostFs afero.Fs, restarter containerd.Restarter) error {
 	slog.Info("uninstall called")
 	shimName := config.Runtime.Name
 	runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
 
-	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath, restarter)
 	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
 
 	binPath, err := shimConfig.Uninstall(shimName)

@@ -27,15 +27,21 @@ import (
 	"github.com/spf13/afero"
 )
 
+type Restarter interface {
+	Restart() error
+}
+
 type Config struct {
 	hostFs     afero.Fs
 	configPath string
+	restarter  Restarter
 }
 
-func NewConfig(hostFs afero.Fs, configPath string) *Config {
+func NewConfig(hostFs afero.Fs, configPath string, restarter Restarter) *Config {
 	return &Config{
 		hostFs:     hostFs,
 		configPath: configPath,
+		restarter:  restarter,
 	}
 }
 
@@ -101,6 +107,10 @@ func (c *Config) RemoveRuntime(shimPath string) (changed bool, err error) {
 	}
 
 	return true, nil
+}
+
+func (c *Config) RestartRuntime() error {
+	return c.restarter.Restart()
 }
 
 func generateConfig(shimPath string, runtimeName string) string {

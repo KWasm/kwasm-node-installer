@@ -41,7 +41,7 @@ func TestConfig_AddRuntime(t *testing.T) {
 		wantFileContent string
 	}{
 		{"missing shim config", fields{
-			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("../../testdata/containerd/missing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
@@ -66,11 +66,11 @@ func TestConfig_AddRuntime(t *testing.T) {
 runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 `},
 		{"missing config", fields{
-			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-config"),
+			hostFs:     tests.FixtureFs("../../testdata/containerd/missing-containerd-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, ``},
 		{"existing shim config", fields{
-			hostFs:     tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("../../testdata/containerd/existing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
@@ -134,7 +134,7 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 		wantFileContent string
 	}{
 		{"missing shim config", fields{
-			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("../../testdata/containerd/missing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]
@@ -155,11 +155,11 @@ func TestConfig_RemoveRuntime(t *testing.T) {
     rdt_config_file = ""
 `},
 		{"missing config", fields{
-			hostFs:     tests.FixtureFs("testdata/containerd/missing-containerd-config"),
+			hostFs:     tests.FixtureFs("../../testdata/containerd/missing-containerd-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, true, ``},
 		{"existing shim config", fields{
-			hostFs:     tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
+			hostFs:     tests.FixtureFs("../../testdata/containerd/existing-containerd-shim-config"),
 			configPath: "/etc/containerd/config.toml",
 		}, args{"/opt/kwasm/bin/containerd-shim-spin-v1"}, false, `[plugins]
   [plugins."io.containerd.monitor.v1.cgroups"]

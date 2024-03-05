@@ -5,6 +5,8 @@ package containerd
 
 import "errors"
 
-func (c *Config) RestartRuntime() error {
+type ContainerdRestarter struct{}
+
+func (r ContainerdRestarter) Restart() error {
 	return errors.New("restarting containerd not implemented")
 }

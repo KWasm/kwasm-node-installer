@@ -24,7 +24,7 @@ func TestGet(t *testing.T) {
 		{
 			"existing state",
 			args{
-				tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
+				tests.FixtureFs("../../testdata/containerd/existing-containerd-shim-config"),
 				"/opt/kwasm",
 			},
 			&state.State{
@@ -40,7 +40,7 @@ func TestGet(t *testing.T) {
 		{
 			"missing state",
 			args{
-				tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
+				tests.FixtureFs("../../testdata/containerd/missing-containerd-shim-config"),
 				"/opt/kwasm",
 			},
 			&state.State{

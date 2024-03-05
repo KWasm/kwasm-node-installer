@@ -29,7 +29,9 @@ import (
 
 var psProcesses = ps.Processes
 
-func (c *Config) RestartRuntime() error {
+type ContainerdRestarter struct{}
+
+func (c ContainerdRestarter) Restart() error {
 	pid, err := getPid()
 	if err != nil {
 		return err

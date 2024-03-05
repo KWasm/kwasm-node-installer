@@ -36,8 +36,9 @@ var installCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 		rootFs := afero.NewOsFs()
 		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
+		restarter := containerd.ContainerdRestarter{}
 
-		if err := runInstall(config, rootFs, hostFs); err != nil {
+		if err := RunInstall(config, rootFs, hostFs, restarter); err != nil {
 			slog.Error("failed to install", "error", err)
 			os.Exit(1)
 		}
@@ -49,27 +50,27 @@ func init() {
 	rootCmd.AddCommand(installCmd)
 }
 
-func runInstall(config Config, rootFs, hostFs afero.Fs) error {
+func RunInstall(config Config, rootFs, hostFs afero.Fs, restarter containerd.Restarter) error {
 	// Get file or directory information.
-	info, err := os.Stat(config.Kwasm.AssetPath)
+	info, err := rootFs.Stat(config.Kwasm.AssetPath)
 	if err != nil {
 		return err
 	}
 
-	var files []fs.DirEntry
+	var files []fs.FileInfo
 	// Check if the path is a directory.
 	if info.IsDir() {
-		files, err = os.ReadDir(config.Kwasm.AssetPath)
+		files, err = afero.ReadDir(rootFs, config.Kwasm.AssetPath)
 		if err != nil {
 			return err
 		}
 	} else {
 		// If the path is not a directory, add the file to the list of files.
-		files = append(files, fs.FileInfoToDirEntry(info))
+		files = append(files, info)
 		config.Kwasm.AssetPath = path.Dir(config.Kwasm.AssetPath)
 	}
 
-	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath, restarter)
 	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
 
 	anythingChanged := false

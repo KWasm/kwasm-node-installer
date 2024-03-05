@@ -49,8 +49,8 @@ func TestConfig_Install(t *testing.T) {
 		{
 			"no changes to shim",
 			fields{
-				tests.FixtureFs("testdata"),
-				tests.FixtureFs("testdata/shim"),
+				tests.FixtureFs("../../testdata"),
+				tests.FixtureFs("../../testdata/shim"),
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-spin-v1"},
@@ -63,8 +63,8 @@ func TestConfig_Install(t *testing.T) {
 		{
 			"install new shim over old",
 			fields{
-				tests.FixtureFs("testdata"),
-				tests.FixtureFs("testdata/shim"),
+				tests.FixtureFs("../../testdata"),
+				tests.FixtureFs("../../testdata/shim"),
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-slight-v1"},
@@ -78,7 +78,7 @@ func TestConfig_Install(t *testing.T) {
 			"unable to find new shim",
 			fields{
 				afero.NewMemMapFs(),
-				tests.FixtureFs("testdata/shim"),
+				tests.FixtureFs("../../testdata/shim"),
 				"/assets",
 				"/opt/kwasm"},
 			args{"some-shim"},
@@ -91,8 +91,8 @@ func TestConfig_Install(t *testing.T) {
 		{
 			"unable to write to hostFs",
 			fields{
-				tests.FixtureFs("testdata"),
-				afero.NewReadOnlyFs(tests.FixtureFs("testdata/shim")),
+				tests.FixtureFs("../../testdata"),
+				afero.NewReadOnlyFs(tests.FixtureFs("../../testdata/shim")),
 				"/assets",
 				"/opt/kwasm"},
 			args{"containerd-shim-spin-v1"},
