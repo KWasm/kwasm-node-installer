@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	conf config
+	config Config
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -50,10 +50,10 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&conf.runtime.name, "runtime", "r", "containerd", "Set the container runtime to configure (containerd, cri-o)")
-	rootCmd.PersistentFlags().StringVarP(&conf.runtime.configPath, "runtime-config", "c", "/etc/containerd/config.toml", "Path to the runtime config file")
-	rootCmd.PersistentFlags().StringVarP(&conf.kwasm.path, "kwasm-path", "k", "/opt/kwasm", "Working directory for kwasm on the host")
-	rootCmd.PersistentFlags().StringVarP(&conf.host.rootPath, "host-root", "H", "/", "Path to the host root path")
+	rootCmd.PersistentFlags().StringVarP(&config.Runtime.Name, "runtime", "r", "containerd", "Set the container runtime to configure (containerd, cri-o)")
+	rootCmd.PersistentFlags().StringVarP(&config.Runtime.ConfigPath, "runtime-config", "c", "/etc/containerd/config.toml", "Path to the runtime config file")
+	rootCmd.PersistentFlags().StringVarP(&config.Kwasm.Path, "kwasm-path", "k", "/opt/kwasm", "Working directory for kwasm on the host")
+	rootCmd.PersistentFlags().StringVarP(&config.Host.RootPath, "host-root", "H", "/", "Path to the host root path")
 }
 
 func initializeConfig(cmd *cobra.Command) error {

@@ -16,16 +16,16 @@
 
 package cmd
 
-type config struct {
-	runtime struct {
-		name       string
-		configPath string
+type Config struct {
+	Runtime struct {
+		Name       string
+		ConfigPath string
 	}
-	kwasm struct {
-		path      string
-		assetPath string
+	Kwasm struct {
+		Path      string
+		AssetPath string
 	}
-	host struct {
-		rootPath string
+	Host struct {
+		RootPath string
 	}
 }

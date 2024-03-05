@@ -35,9 +35,9 @@ var installCmd = &cobra.Command{
 	Short: "Install containerd shims",
 	Run: func(_ *cobra.Command, _ []string) {
 		rootFs := afero.NewOsFs()
-		hostFs := afero.NewBasePathFs(rootFs, conf.host.rootPath)
+		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
 
-		if err := runInstall(conf, rootFs, hostFs); err != nil {
+		if err := runInstall(config, rootFs, hostFs); err != nil {
 			slog.Error("failed to install", "error", err)
 			os.Exit(1)
 		}
@@ -45,13 +45,13 @@ var installCmd = &cobra.Command{
 }
 
 func init() {
-	installCmd.Flags().StringVarP(&conf.kwasm.assetPath, "asset-path", "a", "/assets", "Path to the asset to install")
+	installCmd.Flags().StringVarP(&config.Kwasm.AssetPath, "asset-path", "a", "/assets", "Path to the asset to install")
 	rootCmd.AddCommand(installCmd)
 }
 
-func runInstall(conf config, rootFs, hostFs afero.Fs) error {
+func runInstall(config Config, rootFs, hostFs afero.Fs) error {
 	// Get file or directory information.
-	info, err := os.Stat(conf.kwasm.assetPath)
+	info, err := os.Stat(config.Kwasm.AssetPath)
 	if err != nil {
 		return err
 	}
@@ -59,18 +59,18 @@ func runInstall(conf config, rootFs, hostFs afero.Fs) error {
 	var files []fs.DirEntry
 	// Check if the path is a directory.
 	if info.IsDir() {
-		files, err = os.ReadDir(conf.kwasm.assetPath)
+		files, err = os.ReadDir(config.Kwasm.AssetPath)
 		if err != nil {
 			return err
 		}
 	} else {
 		// If the path is not a directory, add the file to the list of files.
 		files = append(files, fs.FileInfoToDirEntry(info))
-		conf.kwasm.assetPath = path.Dir(conf.kwasm.assetPath)
+		config.Kwasm.AssetPath = path.Dir(config.Kwasm.AssetPath)
 	}
 
-	containerdConfig := containerd.NewConfig(hostFs, conf.runtime.configPath)
-	shimConfig := shim.NewConfig(rootFs, hostFs, conf.kwasm.assetPath, conf.kwasm.path)
+	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
 
 	anythingChanged := false
 	for _, file := range files {
@@ -88,7 +88,7 @@ func runInstall(conf config, rootFs, hostFs afero.Fs) error {
 		if err != nil {
 			return fmt.Errorf("failed to write containerd config: %w", err)
 		}
-		slog.Info("shim configured", "shim", runtimeName, "path", conf.runtime.configPath)
+		slog.Info("shim configured", "shim", runtimeName, "path", config.Runtime.ConfigPath)
 	}
 
 	if !anythingChanged {

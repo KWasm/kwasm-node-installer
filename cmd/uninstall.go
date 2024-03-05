@@ -35,9 +35,9 @@ var uninstallCmd = &cobra.Command{
 	Short: "Uninstall containerd shims",
 	Run: func(_ *cobra.Command, _ []string) {
 		rootFs := afero.NewOsFs()
-		hostFs := afero.NewBasePathFs(rootFs, conf.host.rootPath)
+		hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
 
-		if err := runUninstall(conf, rootFs, hostFs); err != nil {
+		if err := runUninstall(config, rootFs, hostFs); err != nil {
 			slog.Error("failed to uninstall", "error", err)
 			os.Exit(1)
 		}
@@ -48,13 +48,13 @@ func init() {
 	rootCmd.AddCommand(uninstallCmd)
 }
 
-func runUninstall(conf config, rootFs, hostFs afero.Fs) error {
+func runUninstall(config Config, rootFs, hostFs afero.Fs) error {
 	slog.Info("uninstall called")
-	shimName := conf.runtime.name
-	runtimeName := path.Join(conf.kwasm.path, "bin", shimName)
+	shimName := config.Runtime.Name
+	runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
 
-	containerdConfig := containerd.NewConfig(hostFs, conf.runtime.configPath)
-	shimConfig := shim.NewConfig(rootFs, hostFs, conf.kwasm.assetPath, conf.kwasm.path)
+	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
+	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
 
 	binPath, err := shimConfig.Uninstall(shimName)
 	if err != nil {
