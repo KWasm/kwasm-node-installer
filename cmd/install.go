@@ -42,13 +42,13 @@ var installCmd = &cobra.Command{
 }
 
 func init() {
-	installCmd.Flags().StringVarP(&config.Kwasm.AssetPath, "asset-path", "a", "/assets", "Path to the asset to install")
+	installCmd.Flags().StringVarP(&conf.kwasm.assetPath, "asset-path", "a", "/assets", "Path to the asset to install")
 	rootCmd.AddCommand(installCmd)
 }
 
 func runInstall(_ *cobra.Command, _ []string) error {
 	// Get file or directory information.
-	info, err := os.Stat(config.Kwasm.AssetPath)
+	info, err := os.Stat(conf.kwasm.assetPath)
 	if err != nil {
 		return err
 	}
@@ -56,21 +56,21 @@ func runInstall(_ *cobra.Command, _ []string) error {
 	var files []fs.DirEntry
 	// Check if the path is a directory.
 	if info.IsDir() {
-		files, err = os.ReadDir(config.Kwasm.AssetPath)
+		files, err = os.ReadDir(conf.kwasm.assetPath)
 		if err != nil {
 			return err
 		}
 	} else {
 		// If the path is not a directory, add the file to the list of files.
 		files = append(files, fs.FileInfoToDirEntry(info))
-		config.Kwasm.AssetPath = path.Dir(config.Kwasm.AssetPath)
+		conf.kwasm.assetPath = path.Dir(conf.kwasm.assetPath)
 	}
 
 	rootFs := afero.NewOsFs()
-	hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
+	hostFs := afero.NewBasePathFs(rootFs, conf.host.rootPath)
 
-	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
-	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
+	containerdConfig := containerd.NewConfig(hostFs, conf.runtime.configPath)
+	shimConfig := shim.NewConfig(rootFs, hostFs, conf.kwasm.assetPath, conf.kwasm.path)
 
 	anythingChanged := false
 	for _, file := range files {
@@ -88,7 +88,7 @@ func runInstall(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write containerd config: %w", err)
 		}
-		slog.Info("shim configured", "shim", runtimeName, "path", config.Runtime.ConfigPath)
+		slog.Info("shim configured", "shim", runtimeName, "path", conf.runtime.configPath)
 	}
 
 	if !anythingChanged {

@@ -47,14 +47,14 @@ func init() {
 
 func runUninstall(_ *cobra.Command, _ []string) error {
 	slog.Info("uninstall called")
-	shimName := config.Runtime.Name
-	runtimeName := path.Join(config.Kwasm.Path, "bin", shimName)
+	shimName := conf.runtime.name
+	runtimeName := path.Join(conf.kwasm.path, "bin", shimName)
 
 	rootFs := afero.NewOsFs()
-	hostFs := afero.NewBasePathFs(rootFs, config.Host.RootPath)
+	hostFs := afero.NewBasePathFs(rootFs, conf.host.rootPath)
 
-	containerdConfig := containerd.NewConfig(hostFs, config.Runtime.ConfigPath)
-	shimConfig := shim.NewConfig(rootFs, hostFs, config.Kwasm.AssetPath, config.Kwasm.Path)
+	containerdConfig := containerd.NewConfig(hostFs, conf.runtime.configPath)
+	shimConfig := shim.NewConfig(rootFs, hostFs, conf.kwasm.assetPath, conf.kwasm.path)
 
 	binPath, err := shimConfig.Uninstall(shimName)
 	if err != nil {
