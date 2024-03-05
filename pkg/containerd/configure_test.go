@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package containerd
+package containerd //nolint:testpackage // whitebox test
 
 import (
 	"testing"
@@ -108,10 +108,10 @@ runtime_type = "/opt/kwasm/bin/containerd-shim-spin-v1"
 				return
 			}
 
-			require.Nil(t, err)
+			require.NoError(t, err)
 
 			gotContent, err := afero.ReadFile(c.hostFs, c.configPath)
-			require.Nil(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.wantFileContent, string(gotContent))
 		})
@@ -192,10 +192,10 @@ func TestConfig_RemoveRuntime(t *testing.T) {
 				return
 			}
 
-			require.Nil(t, err)
+			require.NoError(t, err)
 
 			gotContent, err := afero.ReadFile(c.hostFs, c.configPath)
-			require.Nil(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.wantFileContent, string(gotContent))
 		})

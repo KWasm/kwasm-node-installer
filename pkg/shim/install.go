@@ -28,18 +28,18 @@ import (
 
 func (c *Config) Install(shimName string) (filePath string, changed bool, err error) {
 	shimPath := filepath.Join(c.assetPath, shimName)
-	srcFile, err := c.rootFs.OpenFile(shimPath, os.O_RDONLY, 0000)
+	srcFile, err := c.rootFs.OpenFile(shimPath, os.O_RDONLY, 0000) //nolint:gomnd // file permissions
 	if err != nil {
 		return "", false, err
 	}
 	dstFilePath := path.Join(c.kwasmPath, "bin", shimName)
 
-	err = c.hostFs.MkdirAll(path.Dir(dstFilePath), 0775)
+	err = c.hostFs.MkdirAll(path.Dir(dstFilePath), 0775) //nolint:gomnd // file permissions
 	if err != nil {
 		return dstFilePath, false, err
 	}
 
-	dstFile, err := c.hostFs.OpenFile(dstFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	dstFile, err := c.hostFs.OpenFile(dstFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755) //nolint:gomnd // file permissions
 	if err != nil {
 		return "", false, err
 	}

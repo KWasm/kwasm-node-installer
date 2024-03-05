@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package shim
+package shim //nolint:testpackage // whitebox test
 
 import (
 	"testing"
@@ -117,7 +117,7 @@ func TestConfig_Install(t *testing.T) {
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 
 			assert.Equal(t, tt.want.filepath, filepath)

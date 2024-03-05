@@ -1,6 +1,6 @@
 module github.com/kwasm/kwasm-node-installer
 
-go 1.21.0
+go 1.22.0
 
 require (
 	github.com/spf13/cobra v1.7.0

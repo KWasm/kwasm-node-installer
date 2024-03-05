@@ -1,7 +1,7 @@
 //go:build unix
 // +build unix
 
-package containerd
+package containerd //nolint:testpackage // whitebox test
 
 import (
 	"fmt"
@@ -15,7 +15,6 @@ import (
 type mockProcess struct {
 	executable string
 	pid        int
-	ppid       int
 }
 
 func (p *mockProcess) Executable() string {
@@ -27,7 +26,7 @@ func (p *mockProcess) Pid() int {
 }
 
 func (p *mockProcess) PPid() int {
-	return p.ppid
+	return 0
 }
 
 func Test_getPid(t *testing.T) {
@@ -47,8 +46,8 @@ func Test_getPid(t *testing.T) {
 		}, 123, false},
 		{"multiple containerd processes found", func() ([]ps.Process, error) {
 			return []ps.Process{
-				&mockProcess{executable: "containerd"},
-				&mockProcess{executable: "containerd"},
+				&mockProcess{executable: "containerd", pid: 0},
+				&mockProcess{executable: "containerd", pid: 0},
 			}, nil
 		}, 0, true},
 		{"error getting processes", func() ([]ps.Process, error) {
@@ -63,7 +62,7 @@ func Test_getPid(t *testing.T) {
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 
 			assert.Equal(t, tt.want, got)

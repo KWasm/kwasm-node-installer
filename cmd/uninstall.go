@@ -29,7 +29,7 @@ import (
 	"github.com/kwasm/kwasm-node-installer/pkg/shim"
 )
 
-// uninstallCmd represents the uninstall command
+// uninstallCmd represents the uninstall command.
 var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall containerd shims",

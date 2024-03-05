@@ -1,4 +1,4 @@
-package state
+package state //nolint:testpackage // whitebox test
 
 import (
 	"testing"
@@ -38,7 +38,7 @@ func TestShim_MarshalJSON(t *testing.T) {
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, tt.want, string(got))
 		})
@@ -95,13 +95,13 @@ func TestShim_UnmarshalJSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := Shim{}
+			var s Shim
 			err := s.UnmarshalJSON([]byte(tt.args.data))
 
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, tt.want.path, s.Path)
 			assert.Equal(t, tt.want.sha256, s.Sha256)

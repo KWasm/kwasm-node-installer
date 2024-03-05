@@ -56,12 +56,11 @@ func getPid() (int, error) {
 		if process.Executable() == "containerd" {
 			containerdProcesses = append(containerdProcesses, process)
 		}
-
 	}
 
-	if len(containerdProcesses) == 1 {
-		return containerdProcesses[0].Pid(), nil
-	} else {
+	if len(containerdProcesses) != 1 {
 		return 0, fmt.Errorf("need exactly one containerd process, found: %d", len(containerdProcesses))
 	}
+
+	return containerdProcesses[0].Pid(), nil
 }

@@ -1,8 +1,9 @@
-package state
+package state_test
 
 import (
 	"testing"
 
+	"github.com/kwasm/kwasm-node-installer/pkg/state"
 	"github.com/kwasm/kwasm-node-installer/tests"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ func TestGet(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *state
+		want    *state.State
 		wantErr bool
 	}{
 		{
@@ -26,8 +27,8 @@ func TestGet(t *testing.T) {
 				tests.FixtureFs("testdata/containerd/existing-containerd-shim-config"),
 				"/opt/kwasm",
 			},
-			&state{
-				Shims: map[string]*Shim{
+			&state.State{
+				Shims: map[string]*state.Shim{
 					"spin-v1": {
 						Sha256: []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
 						Path:   "/opt/kwasm/bin/containerd-shim-spin-v1",
@@ -42,19 +43,19 @@ func TestGet(t *testing.T) {
 				tests.FixtureFs("testdata/containerd/missing-containerd-shim-config"),
 				"/opt/kwasm",
 			},
-			&state{
-				Shims: map[string]*Shim{},
+			&state.State{
+				Shims: map[string]*state.Shim{},
 			},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Get(tt.args.fs, tt.args.kwasmPath)
+			got, err := state.Get(tt.args.fs, tt.args.kwasmPath)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, tt.want.Shims, got.Shims)
 		})
@@ -67,8 +68,8 @@ func TestShimChanged(t *testing.T) {
 		sha256   []byte
 		path     string
 	}
-	state := &state{
-		Shims: map[string]*Shim{
+	state := &state.State{
+		Shims: map[string]*state.Shim{
 			"spin-v1": {
 				Sha256: []byte{109, 165, 232, 241, 122, 155, 250, 156, 176, 76, 242, 44, 135, 182, 71, 83, 148, 236, 236, 58, 244, 253, 195, 55, 247, 45, 109, 191, 51, 25, 234, 82},
 				Path:   "/opt/kwasm/bin/containerd-shim-spin-v1",

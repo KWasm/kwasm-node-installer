@@ -21,10 +21,10 @@ func (s *Shim) MarshalJSON() ([]byte, error) {
 }
 
 func (s *Shim) UnmarshalJSON(data []byte) error {
-	aux := struct {
+	var aux struct {
 		Sha256 string `json:"sha256"`
 		Path   string `json:"path"`
-	}{}
+	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}

@@ -11,14 +11,14 @@ import (
 	"github.com/spf13/afero"
 )
 
-type state struct {
+type State struct {
 	Shims        map[string]*Shim `json:"shims"`
 	fs           afero.Fs
 	lockFilePath string
 }
 
-func Get(fs afero.Fs, kwasmPath string) (*state, error) {
-	out := state{
+func Get(fs afero.Fs, kwasmPath string) (*State, error) {
+	out := State{
 		Shims:        make(map[string]*Shim),
 		lockFilePath: filepath.Join(kwasmPath, "kwasm-lock.json"),
 		fs:           fs,
@@ -35,7 +35,7 @@ func Get(fs afero.Fs, kwasmPath string) (*state, error) {
 	return &out, nil
 }
 
-func (l *state) ShimChanged(shimName string, sha256 []byte, path string) bool {
+func (l *State) ShimChanged(shimName string, sha256 []byte, path string) bool {
 	shim, ok := l.Shims[shimName]
 	if !ok {
 		return true
@@ -44,15 +44,15 @@ func (l *state) ShimChanged(shimName string, sha256 []byte, path string) bool {
 	return !bytes.Equal(shim.Sha256, sha256) || shim.Path != path
 }
 
-func (l *state) UpdateShim(shimName string, shim Shim) {
+func (l *State) UpdateShim(shimName string, shim Shim) {
 	l.Shims[shimName] = &shim
 }
 
-func (l *state) RemoveShim(shimName string) {
+func (l *State) RemoveShim(shimName string) {
 	delete(l.Shims, shimName)
 }
 
-func (l *state) Write() error {
+func (l *State) Write() error {
 	out, err := json.MarshalIndent(l, "", " ")
 	if err != nil {
 		return err
@@ -60,5 +60,5 @@ func (l *state) Write() error {
 
 	slog.Debug("writing lock file", "content", string(out))
 
-	return afero.WriteFile(l.fs, l.lockFilePath, out, 0644)
+	return afero.WriteFile(l.fs, l.lockFilePath, out, 0644) //nolint:gomnd // file permissions
 }

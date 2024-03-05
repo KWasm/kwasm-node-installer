@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -31,11 +32,11 @@ var (
 	config cfg.Config
 )
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "kwasm-node-installer",
 	Short: "kwasm-node-installer manages containerd shims",
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 		return initializeConfig(cmd)
 	},
 }
@@ -65,7 +66,7 @@ func initializeConfig(cmd *cobra.Command) error {
 	v.AddConfigPath("/etc")
 
 	if err := v.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		if !errors.As(err, &viper.ConfigFileNotFoundError{}) {
 			return err
 		}
 	}
@@ -84,14 +85,14 @@ func initializeConfig(cmd *cobra.Command) error {
 	return nil
 }
 
-// bindFlags binds each cobra flag to its associated viper configuration
+// bindFlags binds each cobra flag to its associated viper configuration.
 func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		configName := strings.ReplaceAll(f.Name, "-", "_")
 
 		if !f.Changed && v.IsSet(configName) {
 			val := v.Get(configName)
-			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
+			_ = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
 		}
 	})
 }
