@@ -16,8 +16,6 @@
 
 package cmd
 
-import "path"
-
 type Config struct {
 	Runtime struct {
 		Name       string
@@ -30,12 +28,4 @@ type Config struct {
 	Host struct {
 		RootPath string
 	}
-}
-
-func (c *Config) PathWithHost(p string) string {
-	return path.Join(c.Host.RootPath, p)
-}
-
-func (c *Config) AssetPath(assetName string) string {
-	return path.Join(c.Kwasm.AssetPath, assetName)
 }
