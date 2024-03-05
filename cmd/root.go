@@ -22,14 +22,13 @@ import (
 	"os"
 	"strings"
 
-	cfg "github.com/kwasm/kwasm-node-installer/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 var (
-	config cfg.Config
+	config Config
 )
 
 // rootCmd represents the base command when called without any subcommands.
