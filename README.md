@@ -1,5 +1,13 @@
 # KWasm-node-installer
 
+> 🏁 **KWasm has been retired.** This was a fun exploration of WebAssembly on Kubernetes. Thanks to everyone who starred, used, or contributed!
+>
+> The `kwasm.sh` domain will continue to resolve until **January 20, 2027**.
+>
+> For current Wasm-on-Kubernetes work, check out [spinframework/runtime-class-manager](https://github.com/spinframework/runtime-class-manager).
+>
+> The repo is archived and will not receive updates.
+
 > A Go version of this installer is developed at the [go-rewrite](https://github.com/KWasm/kwasm-node-installer/tree/go-rewrite) branch.
 
 The KWasm Node Installer is a container image that contains binaries and configuration to enable a Kubernetes node to run pure webassembly images.
