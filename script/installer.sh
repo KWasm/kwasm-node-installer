@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -euo pipefail
 
-KWASM_DIR=/opt/kwasm
+KWASM_DIR=${KWASM_DIR:-/opt/kwasm}
 
 CONTAINERD_CONF=/etc/containerd/config.toml
 IS_MICROK8S=false
@@ -60,9 +60,9 @@ if [ ! -f $NODE_ROOT$KWASM_DIR/active ]; then
     elif ls $NODE_ROOT/etc/init.d/k3s > /dev/null 2>&1 ; then
         nsenter --target 1 --mount --uts --ipc --net -- /etc/init.d/k3s restart
     elif $IS_RKE2_AGENT; then
-        nsenter --target 1 --mount --uts --ipc --net -- /bin/systemctl restart rke2-agent
+        nsenter --target 1 --mount --uts --ipc --net -- systemctl restart rke2-agent
     else
-        nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- /bin/systemctl restart containerd
+        nsenter -m/$NODE_ROOT/proc/1/ns/mnt -- systemctl restart containerd
     fi
 else
     echo "No change in containerd/config.toml"

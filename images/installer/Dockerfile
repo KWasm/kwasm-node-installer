@@ -5,9 +5,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y curl
 
 RUN mkdir -p /release/bin/ \
-    && curl -L https://github.com/containerd/runwasi/releases/download/containerd-shim-wasmedge%2Fv0.3.0/containerd-shim-wasmedge-$(uname -m | sed s/arm64/aarch64/g | sed s/amd64/x86_64/g).tar.gz | tar -xzf - -C /release/bin/ \
-    && curl -L https://github.com/containerd/runwasi/releases/download/containerd-shim-wasmtime%2Fv0.3.0/containerd-shim-wasmtime-$(uname -m | sed s/arm64/aarch64/g | sed s/amd64/x86_64/g).tar.gz | tar -xzf - -C /release/bin/ \
-    && curl -L https://github.com/containerd/runwasi/releases/download/containerd-shim-wasmer%2Fv0.3.0/containerd-shim-wasmer-$(uname -m | sed s/arm64/aarch64/g | sed s/amd64/x86_64/g).tar.gz | tar -xzf - -C /release/bin/
+    && curl -L https://github.com/containerd/runwasi/releases/download/containerd-shim-wasmedge%2Fv0.4.0/containerd-shim-wasmedge-$(uname -m | sed s/arm64/aarch64/g | sed s/amd64/x86_64/g).tar.gz | tar -xzf - -C /release/bin/ \
+    && curl -L https://github.com/containerd/runwasi/releases/download/containerd-shim-wasmtime%2Fv0.4.0/containerd-shim-wasmtime-$(uname -m | sed s/arm64/aarch64/g | sed s/amd64/x86_64/g).tar.gz | tar -xzf - -C /release/bin/ \
+    && curl -L https://github.com/containerd/runwasi/releases/download/containerd-shim-wasmer%2Fv0.4.0/containerd-shim-wasmer-$(uname -m | sed s/arm64/aarch64/g | sed s/amd64/x86_64/g).tar.gz | tar -xzf - -C /release/bin/
 
 FROM ${CONTAINERD_RUNWASI} AS containerd_runwasi
 
